@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Ujian Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../public/css/style.css">
+    <link rel="stylesheet" href="../../public/css/navbar.css">
+    <link rel="stylesheet" href="../../public/css/admin.css">
+</head>
+<body>
+
+    <!-- ============================================================
+    NAVBAR
+    ============================================================ -->
+    <nav class="navbar-placeholder">
+        <div class="brand">📚 Ujian<span>Online</span></div>
+        <div class="nav-right">
+            <span style="color:#94a3b8;font-size:0.85em;" id="adminName">Administrator</span>
+            <div class="user-avatar">A</div>
+            <button class="btn-logout-nav" onclick="handleLogout()">
+                <span class="logout-icon">🚪</span>
+                <span class="logout-text">Logout</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+    TOAST NOTIFICATION
+    ============================================================ -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ============================================================
+    DASHBOARD CONTENT
+    ============================================================ -->
+    <div class="admin-dashboard">
+
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1>👑 Admin <span>Dashboard</span></h1>
+                <p>Kelola user, peserta, ujian, dan hasil ujian</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openModal('tambahUser')">👤 Tambah User</button>
+                <button class="btn btn-primary" onclick="openModal('tambahPeserta')">➕ Tambah Peserta</button>
+                <button class="btn btn-success" onclick="openModal('tambahSoal')">📝 Tambah Soal</button>
+                <button class="btn btn-warning" onclick="openModal('uploadSoal')">📄 Upload Word</button>
+                <button class="btn btn-danger" onclick="resetData()">🔄 Reset Data</button>
+                <button class="btn btn-outline" onclick="refreshData()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <!-- Storage Info -->
+        <div style="margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+            <span class="storage-info" id="storageInfo">💾 Data tersimpan di localStorage</span>
+            <span class="storage-info" id="dataCount">👤 0 User | 👥 0 Peserta | 📝 0 Soal</span>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">👤</span>
+                    <span class="stat-change up">↑ 0%</span>
+                </div>
+                <div class="stat-number" id="totalUsers">0</div>
+                <div class="stat-label">Total User</div>
+                <div class="stat-detail">Admin: <span id="totalAdmin">0</span> | Guru: <span id="totalGuru">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">👥</span>
+                    <span class="stat-change up">↑ 0%</span>
+                </div>
+                <div class="stat-number" id="totalPeserta">0</div>
+                <div class="stat-label">Total Peserta</div>
+                <div class="stat-detail">Aktif: <span id="pesertaAktif">0</span> | Selesai: <span id="pesertaSelesai">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">📝</span>
+                    <span class="stat-change up">↑ 0%</span>
+                </div>
+                <div class="stat-number" id="totalSoal">0</div>
+                <div class="stat-label">Total Soal</div>
+                <div class="stat-detail">Pretest: <span id="soalPretest">0</span> | Posttest: <span id="soalPosttest">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">📊</span>
+                    <span class="stat-change up">↑ 0%</span>
+                </div>
+                <div class="stat-number" id="rataRata">0</div>
+                <div class="stat-label">Rata-rata Nilai</div>
+                <div class="stat-detail">Pretest: <span id="rataPretest">0</span> | Posttest: <span id="rataPosttest">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">🏆</span>
+                    <span class="stat-change up">↑ 0%</span>
+                </div>
+                <div class="stat-number" id="nilaiTertinggi">0</div>
+                <div class="stat-label">Nilai Tertinggi</div>
+                <div class="stat-detail">Peserta: <span id="pesertaTerbaik">-</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">📈</span>
+                    <span class="stat-change neutral">= 0%</span>
+                </div>
+                <div class="stat-number" id="pretestCount">0</div>
+                <div class="stat-label">Pretest</div>
+                <div class="stat-detail">Total peserta: <span id="totalPretest">0</span></div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="users" onclick="switchTab('users')">👤 Manajemen User</button>
+            <button class="tab-btn" data-tab="peserta" onclick="switchTab('peserta')">👥 Manajemen Peserta</button>
+            <button class="tab-btn" data-tab="soal" onclick="switchTab('soal')">📝 Manajemen Soal</button>
+            <button class="tab-btn" data-tab="ujian" onclick="switchTab('ujian')">📋 Pretest & Posttest</button>
+            <button class="tab-btn" data-tab="hasil" onclick="switchTab('hasil')">📊 Hasil Ujian</button>
+        </div>
+
+        <!-- ============================================================
+        TAB: MANAJEMEN USER
+        ============================================================ -->
+        <div class="tab-panel active" id="tab-users">
+            <div class="section-title">
+                <h2>👤 Manajemen User</h2>
+                <button class="btn btn-primary btn-sm" onclick="openModal('tambahUser')">
+                    <span style="font-size:1.1em;">➕</span> Tambah User
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h3>Daftar User (Admin & Guru)</h3>
+                    <div class="table-search">
+                        <div class="search-group">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchUser" placeholder="Cari user..." onkeyup="filterUserTable()">
+                        </div>
+                        <select id="filterUserRole" onchange="filterUserTable()">
+                            <option value="all">Semua Role</option>
+                            <option value="admin">👑 Admin</option>
+                            <option value="guru">👨‍🏫 Guru</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-scroll">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">NO</th>
+                                <th style="min-width:150px;">USERNAME / NAMA</th>
+                                <th style="min-width:200px;">DATA GURU</th>
+                                <th style="width:90px;">ROLE</th>
+                                <th style="width:100px;">STATUS</th>
+                                <th style="width:140px;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <!-- Generated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="table-info">
+                        <span id="userTotalCount">0</span> user ditemukan
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-outline btn-xs" onclick="refreshData()">🔄 Refresh</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        TAB: MANAJEMEN PESERTA
+        ============================================================ -->
+        <div class="tab-panel" id="tab-peserta">
+            <div class="section-title">
+                <h2>👥 Manajemen Peserta</h2>
+                <button class="btn btn-primary btn-sm" onclick="openModal('tambahPeserta')">➕ Tambah Peserta</button>
+            </div>
+
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h3>Data Peserta Ujian</h3>
+                    <div class="table-search">
+                        <div class="search-group">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchPeserta" placeholder="Cari peserta..." onkeyup="filterTable()">
+                        </div>
+                        <select id="filterExam" onchange="filterTable()">
+                            <option value="all">Semua Ujian</option>
+                            <option value="pretest">📋 Pretest</option>
+                            <option value="posttest">📝 Posttest</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">NO</th>
+                                <th>NAMA</th>
+                                <th>NIP/NIS</th>
+                                <th style="min-width:200px;">UJIAN</th>
+                                <th style="width:80px;">RATA-RATA</th>
+                                <th style="width:110px;">STATUS</th>
+                                <th style="width:130px;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pesertaTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="table-info">
+                        <span id="pesertaTotalCount">0</span> peserta ditemukan
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-outline btn-xs" onclick="refreshData()">🔄 Refresh</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        TAB: MANAJEMEN SOAL
+        ============================================================ -->
+        <div class="tab-panel" id="tab-soal">
+            <div class="section-title">
+                <h2>📝 Manajemen Soal</h2>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-success btn-sm" onclick="openModal('tambahSoal')">➕ Tambah Soal</button>
+                    <button class="btn btn-warning btn-sm" onclick="openModal('uploadSoal')">📄 Upload Word</button>
+                    <button class="btn btn-danger btn-sm" onclick="hapusSemuaSoal()">🗑️ Hapus Semua Soal</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h3>Daftar Soal</h3>
+                    <div class="table-search">
+                        <div class="search-group">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchSoal" placeholder="Cari soal..." onkeyup="filterSoalTable()">
+                        </div>
+                        <select id="filterSoalJenis" onchange="filterSoalTable()">
+                            <option value="all">Semua Jenis</option>
+                            <option value="pretest">📋 Pretest</option>
+                            <option value="posttest">📝 Posttest</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">NO</th>
+                                <th>PERTANYAAN</th>
+                                <th>PILIHAN</th>
+                                <th style="width:80px;">JAWABAN</th>
+                                <th style="width:100px;">JENIS</th>
+                                <th style="width:60px;">BOBOT</th>
+                                <th style="width:120px;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="soalTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="table-info">
+                        <span id="soalTotalCount">0</span> soal ditemukan
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-outline btn-xs" onclick="refreshData()">🔄 Refresh</button>
+                        <button class="btn btn-danger btn-xs" onclick="hapusSemuaSoal()">🗑️ Hapus Semua</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        TAB: PRETEST & POSTTEST (Dengan Toggle Aktif/Nonaktif)
+        ============================================================ -->
+        <div class="tab-panel" id="tab-ujian">
+            <div class="exam-grid">
+                <!-- Pretest Card -->
+                <div class="exam-card">
+                    <div class="exam-header">
+                        <div class="exam-title">
+                            <span class="exam-icon">📋</span>
+                            <h3>Pretest</h3>
+                            <span class="exam-badge pretest">PRE-TEST</span>
+                        </div>
+                        <div class="exam-actions">
+                            <div class="toggle-container">
+                                <span class="toggle-label">Status:</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="pretestToggle" onchange="toggleUjian('pretest')">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="toggle-status inactive" id="pretestStatus">🔴 Nonaktif</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-body">
+                        <div class="exam-status-info inactive" id="pretestStatusInfo">
+                            <span class="status-icon">🔴</span>
+                            <span>Ujian Pretest sedang <strong>NONAKTIF</strong>. Peserta tidak dapat mengikuti ujian.</span>
+                        </div>
+                        <div class="exam-stats">
+                            <div class="exam-stat">
+                                <div class="exam-stat-number" id="pretestPeserta">0</div>
+                                <div class="exam-stat-label">Peserta</div>
+                            </div>
+                            <div class="exam-stat">
+                                <div class="exam-stat-number" id="pretestSoal">0</div>
+                                <div class="exam-stat-label">Soal</div>
+                            </div>
+                            <div class="exam-stat">
+                                <div class="exam-stat-number" id="pretestRata">0</div>
+                                <div class="exam-stat-label">Rata-rata</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-footer">
+                        <button class="btn btn-sm btn-primary" onclick="openModal('kelolaPretest')">📋 Kelola</button>
+                        <button class="btn btn-sm btn-success" onclick="openModal('tambahSoalPretest')">➕ Tambah Soal</button>
+                        <button class="btn btn-sm btn-outline" onclick="viewDetail('pretest')">📊 Detail</button>
+                    </div>
+                </div>
+
+                <!-- Posttest Card -->
+                <div class="exam-card">
+                    <div class="exam-header">
+                        <div class="exam-title">
+                            <span class="exam-icon">📝</span>
+                            <h3>Posttest</h3>
+                            <span class="exam-badge posttest">POST-TEST</span>
+                        </div>
+                        <div class="exam-actions">
+                            <div class="toggle-container">
+                                <span class="toggle-label">Status:</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="posttestToggle" onchange="toggleUjian('posttest')">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="toggle-status inactive" id="posttestStatus">🔴 Nonaktif</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-body">
+                        <div class="exam-status-info inactive" id="posttestStatusInfo">
+                            <span class="status-icon">🔴</span>
+                            <span>Ujian Posttest sedang <strong>NONAKTIF</strong>. Peserta tidak dapat mengikuti ujian.</span>
+                        </div>
+                        <div class="exam-stats">
+                            <div class="exam-stat">
+                                <div class="exam-stat-number" id="posttestPeserta">0</div>
+                                <div class="exam-stat-label">Peserta</div>
+                            </div>
+                            <div class="exam-stat">
+                                <div class="exam-stat-number" id="posttestSoal">0</div>
+                                <div class="exam-stat-label">Soal</div>
+                            </div>
+                            <div class="exam-stat">
+                                <div class="exam-stat-number" id="posttestRata">0</div>
+                                <div class="exam-stat-label">Rata-rata</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-footer">
+                        <button class="btn btn-sm btn-primary" onclick="openModal('kelolaPosttest')">📋 Kelola</button>
+                        <button class="btn btn-sm btn-success" onclick="openModal('tambahSoalPosttest')">➕ Tambah Soal</button>
+                        <button class="btn btn-sm btn-outline" onclick="viewDetail('posttest')">📊 Detail</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score Chart -->
+            <div class="score-chart">
+                <div class="chart-header">
+                    <h3>📊 Distribusi Nilai Peserta</h3>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <span class="chart-info" id="chartInfo">
+                            <strong id="chartTotalPeserta">0</strong> peserta
+                        </span>
+                        <select id="chartFilter" onchange="updateChart()" style="padding:6px 12px;border:2px solid #e5e9f0;border-radius:8px;font-family:'Inter',sans-serif;font-size:0.85em;">
+                            <option value="all">Semua Peserta</option>
+                            <option value="pretest">📋 Pretest</option>
+                            <option value="posttest">📝 Posttest</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="score-bars" id="scoreBars"></div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background:#7c3aed;"></span>
+                        <span>Nilai Peserta</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background:#d1fae5;border:1px solid #059669;"></span>
+                        <span>✅ Lulus (≥70)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background:#fee2e2;border:1px solid #dc2626;"></span>
+                        <span>❌ Tidak Lulus (&lt;70)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background:#fef3c7;border:1px solid #d97706;"></span>
+                        <span>⏳ Belum Ujian</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        TAB: HASIL UJIAN
+        ============================================================ -->
+        <div class="tab-panel" id="tab-hasil">
+            <div class="section-title">
+                <h2>📊 Hasil Ujian Guru</h2>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-primary btn-sm" onclick="generateSampleHasilUjian(); refreshHasilUjian();">📝 Sample Data</button>
+                    <button class="btn btn-outline btn-sm" onclick="refreshHasilUjian()">🔄 Refresh</button>
+                    <button class="btn btn-success btn-sm" onclick="cetakHasilUjian()">🖨️ Cetak</button>
+                    <button class="btn btn-danger btn-sm" onclick="hapusSemuaHasil()">🗑️ Hapus Semua</button>
+                </div>
+            </div>
+
+            <div class="hasil-stats-grid">
+                <div class="hasil-stat-card">
+                    <div class="stat-label">Total Ujian</div>
+                    <div class="stat-number" id="statTotalUjian">0</div>
+                </div>
+                <div class="hasil-stat-card">
+                    <div class="stat-label">Rata-rata Nilai</div>
+                    <div class="stat-number green" id="statRataNilai">0</div>
+                </div>
+                <div class="hasil-stat-card">
+                    <div class="stat-label">Lulus</div>
+                    <div class="stat-number green" id="statLulus">0</div>
+                </div>
+                <div class="hasil-stat-card">
+                    <div class="stat-label">Tidak Lulus</div>
+                    <div class="stat-number red" id="statTidakLulus">0</div>
+                </div>
+                <div class="hasil-stat-card">
+                    <div class="stat-label">Pretest</div>
+                    <div class="stat-number blue" id="statPretest">0</div>
+                </div>
+                <div class="hasil-stat-card">
+                    <div class="stat-label">Posttest</div>
+                    <div class="stat-number green" id="statPosttest">0</div>
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="margin-top:20px;">
+                <div class="table-header">
+                    <h3>Daftar Hasil Ujian</h3>
+                    <div class="table-search">
+                        <div class="search-group">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchHasil" placeholder="Cari guru..." onkeyup="filterHasilTable()">
+                        </div>
+                        <select id="filterHasilType" onchange="filterHasilTable()">
+                            <option value="all">Semua Ujian</option>
+                            <option value="pretest">📋 Pretest</option>
+                            <option value="posttest">📝 Posttest</option>
+                        </select>
+                        <select id="filterHasilStatus" onchange="filterHasilTable()">
+                            <option value="all">Semua Status</option>
+                            <option value="LULUS">✅ Lulus</option>
+                            <option value="TIDAK LULUS">❌ Tidak Lulus</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">NO</th>
+                                <th style="min-width:140px;">NAMA GURU</th>
+                                <th style="min-width:120px;">NIP</th>
+                                <th style="min-width:150px;">NAMA SEKOLAH</th>
+                                <th style="width:100px;">UJIAN</th>
+                                <th style="width:60px;">TOTAL SOAL</th>
+                                <th style="width:60px;">✅ BENAR</th>
+                                <th style="width:70px;">NILAI</th>
+                                <th style="width:110px;">STATUS</th>
+                                <th style="width:100px;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hasilTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="table-info">
+                        <span id="hasilTotalCount">0</span> hasil ditemukan
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-outline btn-xs" onclick="refreshHasilUjian()">🔄 Refresh</button>
+                        <button class="btn btn-success btn-xs" onclick="cetakHasilUjian()">🖨️ Cetak</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================
+    MODALS
+    ============================================================ -->
+
+    <!-- Modal Tambah User -->
+    <div class="modal-overlay" id="modalTambahUser">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>👤 Tambah User</h2>
+                <button class="modal-close" onclick="closeModal('modalTambahUser')">✕</button>
+            </div>
+            <form onsubmit="tambahUser(event)">
+                <div class="form-group">
+                    <label>Username <span class="required">*</span></label>
+                    <input type="text" id="userUsername" placeholder="Masukkan username" required>
+                </div>
+                <div class="form-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="userEmail" placeholder="Masukkan email" required>
+                </div>
+                <div class="form-group">
+                    <label>Nama Lengkap <span class="required">*</span></label>
+                    <input type="text" id="userFullname" placeholder="Masukkan nama lengkap" required>
+                </div>
+                <div class="form-group">
+                    <label>Password <span class="required">*</span></label>
+                    <input type="password" id="userPassword" placeholder="Minimal 6 karakter" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Role <span class="required">*</span></label>
+                    <select id="userRole" required onchange="toggleGuruFields()">
+                        <option value="admin">👑 Admin</option>
+                        <option value="guru">👨‍🏫 Guru</option>
+                    </select>
+                </div>
+
+                <div id="guruFields" style="display:none;border-top:2px dashed #eef2f7;padding-top:16px;margin-top:8px;">
+                    <p style="font-size:0.85em;color:#059669;font-weight:600;margin-bottom:12px;">📋 Data Guru</p>
+                    <div class="form-group">
+                        <label>NIP</label>
+                        <input type="text" id="userNip" placeholder="Masukkan NIP">
+                    </div>
+                    <div class="form-group">
+                        <label>NUPTK</label>
+                        <input type="text" id="userNuptk" placeholder="Masukkan NUPTK (16 digit)">
+                    </div>
+                    <div class="form-group">
+                        <label>Tempat Lahir</label>
+                        <input type="text" id="userTempatLahir" placeholder="Masukkan tempat lahir">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal Lahir</label>
+                        <input type="date" id="userTanggalLahir">
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Sekolah</label>
+                        <input type="text" id="userSekolah" placeholder="Masukkan nama sekolah">
+                    </div>
+                    <div class="form-group">
+                        <label>Mata Pelajaran</label>
+                        <input type="text" id="userMapel" placeholder="Masukkan mata pelajaran">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="userStatus">
+                        <option value="active">✅ Aktif</option>
+                        <option value="inactive">⏸ Nonaktif</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalTambahUser')">Batal</button>
+                    <button type="submit" class="btn btn-primary">💾 Simpan User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Peserta -->
+    <div class="modal-overlay" id="modalTambahPeserta">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>➕ Tambah Peserta</h2>
+                <button class="modal-close" onclick="closeModal('modalTambahPeserta')">✕</button>
+            </div>
+            <form onsubmit="tambahPeserta(event)">
+                <div class="form-group">
+                    <label>Nama Lengkap <span class="required">*</span></label>
+                    <input type="text" id="namaPeserta" placeholder="Masukkan nama lengkap" required>
+                </div>
+                <div class="form-group">
+                    <label>NIP / NIS <span class="required">*</span></label>
+                    <input type="text" id="nipPeserta" placeholder="Masukkan NIP/NIS" required>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Ujian <span class="required">*</span></label>
+                    <select id="jenisUjianPeserta" required>
+                        <option value="pretest">📋 Pretest</option>
+                        <option value="posttest">📝 Posttest</option>
+                        <option value="both">📋 Pretest & 📝 Posttest</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kelas</label>
+                    <input type="text" id="kelasPeserta" placeholder="Masukkan kelas (opsional)">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalTambahPeserta')">Batal</button>
+                    <button type="submit" class="btn btn-primary">💾 Simpan Peserta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Soal -->
+    <div class="modal-overlay" id="modalTambahSoal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📝 Tambah Soal</h2>
+                <button class="modal-close" onclick="closeModal('modalTambahSoal')">✕</button>
+            </div>
+            <form onsubmit="tambahSoal(event)">
+                <div class="form-group">
+                    <label>Jenis Ujian <span class="required">*</span></label>
+                    <select id="jenisSoal" required>
+                        <option value="pretest">📋 Pretest</option>
+                        <option value="posttest">📝 Posttest</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Pertanyaan <span class="required">*</span></label>
+                    <input type="text" id="pertanyaanSoal" placeholder="Masukkan pertanyaan" required>
+                </div>
+                <div class="form-group">
+                    <label>Pilihan A <span class="required">*</span></label>
+                    <input type="text" id="pilihanA" placeholder="Pilihan A" required>
+                </div>
+                <div class="form-group">
+                    <label>Pilihan B <span class="required">*</span></label>
+                    <input type="text" id="pilihanB" placeholder="Pilihan B" required>
+                </div>
+                <div class="form-group">
+                    <label>Pilihan C</label>
+                    <input type="text" id="pilihanC" placeholder="Pilihan C (opsional)">
+                </div>
+                <div class="form-group">
+                    <label>Pilihan D</label>
+                    <input type="text" id="pilihanD" placeholder="Pilihan D (opsional)">
+                </div>
+                <div class="form-group">
+                    <label>Jawaban Benar <span class="required">*</span></label>
+                    <select id="jawabanBenar" required>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bobot Nilai</label>
+                    <input type="number" id="bobotSoal" value="1" min="1" max="10">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalTambahSoal')">Batal</button>
+                    <button type="submit" class="btn btn-success">💾 Simpan Soal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Upload Soal dari Word -->
+    <div class="modal-overlay" id="modalUploadSoal">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <h2>📄 Upload Soal dari Word</h2>
+                <button class="modal-close" onclick="closeModal('modalUploadSoal')">✕</button>
+            </div>
+
+            <div class="word-info">
+                <span class="info-icon">📌</span>
+                <span>Upload file Word (.docx) dengan format soal yang sudah ditentukan. <a href="#" onclick="downloadTemplate()" style="color:#1d4ed8;font-weight:600;text-decoration:underline;">Download template</a></span>
+            </div>
+
+            <div class="form-group">
+                <label>Jenis Ujian untuk Soal yang Diupload</label>
+                <select id="jenisSoalUpload" required>
+                    <option value="pretest">📋 Pretest</option>
+                    <option value="posttest">📝 Posttest</option>
+                </select>
+            </div>
+
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📤</div>
+                <div class="upload-title">Klik atau drag & drop file Word</div>
+                <div class="upload-desc">Upload file .docx dengan format soal</div>
+                <div class="upload-formats">Format: .docx | Maks: 5MB</div>
+                <input type="file" id="fileInput" accept=".docx,.doc" style="display:none;" onchange="handleFileUpload(event)">
+                <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">📂 Pilih File</button>
+            </div>
+
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Mengupload 0%</div>
+            </div>
+
+            <div class="soal-preview" id="soalPreview" style="display:none;">
+                <div class="preview-header">
+                    <h4>📋 Preview Soal</h4>
+                    <span class="preview-count" id="previewCount">0 soal</span>
+                </div>
+                <div id="previewList"></div>
+                <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end;">
+                    <button class="btn btn-outline" onclick="clearPreview()">🗑️ Hapus Semua</button>
+                    <button class="btn btn-success" onclick="saveUploadedSoal()">✅ Simpan Semua Soal</button>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top:16px;">
+                <button class="btn btn-outline" onclick="closeModal('modalUploadSoal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kelola Pretest -->
+    <div class="modal-overlay" id="modalKelolaPretest">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <h2>📋 Kelola Pretest</h2>
+                <button class="modal-close" onclick="closeModal('modalKelolaPretest')">✕</button>
+            </div>
+            <div style="margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:#f8fafc;border-radius:8px;">
+                <p><strong>Total Peserta:</strong> <span id="kelolaPretestPeserta">0</span></p>
+                <p><strong>Total Soal:</strong> <span id="kelolaPretestSoal">0</span></p>
+                <p>
+                    <strong>Status:</strong> 
+                    <span class="status-info" id="pretestStatusInfoModal" style="font-weight:600;">🔴 NONAKTIF</span>
+                </p>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th style="width:80px;">Skor</th>
+                            <th style="width:110px;">Status</th>
+                            <th style="width:120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kelolaPretestBody"></tbody>
+                </table>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-outline" onclick="closeModal('modalKelolaPretest')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kelola Posttest -->
+    <div class="modal-overlay" id="modalKelolaPosttest">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <h2>📋 Kelola Posttest</h2>
+                <button class="modal-close" onclick="closeModal('modalKelolaPosttest')">✕</button>
+            </div>
+            <div style="margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:#f8fafc;border-radius:8px;">
+                <p><strong>Total Peserta:</strong> <span id="kelolaPosttestPeserta">0</span></p>
+                <p><strong>Total Soal:</strong> <span id="kelolaPosttestSoal">0</span></p>
+                <p>
+                    <strong>Status:</strong> 
+                    <span class="status-info" id="posttestStatusInfoModal" style="font-weight:600;">🔴 NONAKTIF</span>
+                </p>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th style="width:80px;">Skor</th>
+                            <th style="width:110px;">Status</th>
+                            <th style="width:120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kelolaPosttestBody"></tbody>
+                </table>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-outline" onclick="closeModal('modalKelolaPosttest')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Soal -->
+    <div class="modal-overlay" id="modalEditSoal">
+        <div class="modal" style="max-width:650px;">
+            <div class="modal-header">
+                <h2>✏️ Edit Soal</h2>
+                <button class="modal-close" onclick="closeModal('modalEditSoal')">✕</button>
+            </div>
+            <form id="editSoalForm" onsubmit="saveEditSoal(event)">
+                <input type="hidden" id="editSoalId">
+                <div class="form-group">
+                    <label>Jenis Ujian</label>
+                    <select id="editJenisSoal" required>
+                        <option value="pretest">📋 Pretest</option>
+                        <option value="posttest">📝 Posttest</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Pertanyaan</label>
+                    <input type="text" id="editPertanyaan" placeholder="Masukkan pertanyaan" required>
+                </div>
+                <div class="form-group">
+                    <label>Pilihan A</label>
+                    <input type="text" id="editPilihanA" placeholder="Pilihan A" required>
+                </div>
+                <div class="form-group">
+                    <label>Pilihan B</label>
+                    <input type="text" id="editPilihanB" placeholder="Pilihan B" required>
+                </div>
+                <div class="form-group">
+                    <label>Pilihan C</label>
+                    <input type="text" id="editPilihanC" placeholder="Pilihan C (opsional)">
+                </div>
+                <div class="form-group">
+                    <label>Pilihan D</label>
+                    <input type="text" id="editPilihanD" placeholder="Pilihan D (opsional)">
+                </div>
+                <div class="form-group">
+                    <label>Jawaban Benar</label>
+                    <select id="editJawabanBenar" required>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bobot Nilai</label>
+                    <input type="number" id="editBobot" value="1" min="1" max="10">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditSoal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script src="../../public/js/admin.js"></script>
+
+</body>
+</html>

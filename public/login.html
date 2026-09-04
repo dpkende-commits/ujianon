@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Ujian Online System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+    <!-- ============================================================
+    TOAST NOTIFICATION
+    ============================================================ -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ============================================================
+    LOGIN WRAPPER
+    ============================================================ -->
+    <div class="login-wrapper">
+
+        <div class="login-card">
+
+            <!-- Header -->
+            <div class="login-header">
+                <div class="brand-icon">📚</div>
+                <h1>Ujian <span>Online</span></h1>
+                <p>Login ke sistem manajemen ujian</p>
+            </div>
+
+            <!-- Alert -->
+            <div class="login-alert" id="loginAlert">
+                <span class="alert-icon"></span>
+                <span class="alert-message"></span>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="role-selector" id="roleSelector">
+                <button class="role-btn active-admin" data-role="admin" onclick="selectRole('admin')">
+                    <span class="role-icon">👑</span>
+                    Admin
+                    <span class="role-badge">Panel</span>
+                </button>
+                <button class="role-btn" data-role="guru" onclick="selectRole('guru')">
+                    <span class="role-icon">👨‍🏫</span>
+                    Guru
+                    <span class="role-badge">Panel</span>
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)" autocomplete="off" novalidate>
+
+                <!-- Username -->
+                <div class="login-form-group">
+                    <label for="username">
+                        Username atau Email
+                        <span class="required">*</span>
+                    </label>
+                    <div class="login-input-group">
+                        <span class="input-icon">👤</span>
+                        <input
+                        type="text"
+                        id="username"
+                        placeholder="Masukkan username atau email"
+                        required
+                        autofocus
+                        >
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="login-form-group">
+                    <label for="password">
+                        Password
+                        <span class="required">*</span>
+                    </label>
+                    <div class="login-input-group">
+                        <span class="input-icon">🔒</span>
+                        <input
+                        type="password"
+                        id="password"
+                        placeholder="Masukkan password"
+                        required
+                        >
+                        <button type="button" class="toggle-password" onclick="togglePassword()" title="Tampilkan password">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div class="login-form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember">
+                        Ingat saya
+                    </label>
+                    <a href="#" class="forgot-link" onclick="showForgotPassword(event)">Lupa password?</a>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span class="btn-content">
+                        <span class="btn-text">🔐 Masuk ke Sistem</span>
+                        <span class="spinner"></span>
+                    </span>
+                </button>
+
+            </form>
+
+            <!-- Footer -->
+            <div class="login-footer">
+
+                <div class="register-link">
+                    Belum punya akun? <a href="#" onclick="showRegister(event)">Daftar sekarang</a>
+                </div>
+
+                <div class="demo-accounts">
+                    <div class="demo-account" onclick="fillDemoAccount('admin')">
+                        <span class="demo-role demo-role-admin">👑 Admin</span>
+                        <span class="demo-creds">
+                            <strong>admin@admin.com</strong> / admin123
+                        </span>
+                        <span class="demo-click-hint">👆 Klik untuk auto-fill</span>
+                    </div>
+                    <div class="demo-account" onclick="fillDemoAccount('guru')">
+                        <span class="demo-role demo-role-guru">👨‍🏫 Guru</span>
+                        <span class="demo-creds">
+                            <strong>guru@sekolah.com</strong> / guru123
+                        </span>
+                        <span class="demo-click-hint">👆 Klik untuk auto-fill</span>
+                    </div>
+                </div>
+
+                <div class="version">
+                    v3.0.0 · Ujian Online System
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // STATE
+        // ============================================================
+        let selectedRole = 'admin';
+        let isLoggingIn = false;
+
+        // ============================================================
+        // USER DATA - Dari localStorage
+        // ============================================================
+
+        function getUsersFromStorage() {
+            try {
+                const stored = localStorage.getItem('ujianOnlineData');
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    return data.userData || [];
+                }
+                return [];
+            } catch (e) {
+                console.error('❌ Gagal mengambil data user:', e);
+                return [];
+            }
+        }
+
+        function getUserByUsername(username, role) {
+            const users = getUsersFromStorage();
+
+            let user = users.find(u =>
+                u.username === username &&
+                u.role === role &&
+                u.status === 'active'
+            );
+
+            if (!user) {
+                user = users.find(u =>
+                    u.email === username &&
+                    u.role === role &&
+                    u.status === 'active'
+                );
+            }
+
+            return user;
+        }
+
+        function authenticate(username, password, role) {
+            const user = getUserByUsername(username, role);
+
+            if (user && user.password === password) {
+                return {
+                    success: true,
+                    user: {
+                        username: user.username,
+                        email: user.email,
+                        name: user.fullname,
+                        role: user.role
+                    },
+                    message: `Login berhasil! Selamat datang, ${user.fullname}`
+                };
+            }
+
+            if (role === 'admin') {
+                if (username === 'admin' && password === 'admin123') {
+                    return {
+                        success: true,
+                        user: {
+                            username: 'admin',
+                            email: 'admin@admin.com',
+                            name: 'Administrator',
+                            role: 'admin'
+                        },
+                        message: 'Login Admin berhasil!'
+                    };
+                }
+            }
+
+            if (role === 'guru') {
+                const users = getUsersFromStorage();
+                const guruExists = users.some(u => u.username === username && u.role === 'guru');
+
+                if (guruExists) {
+                    return {
+                        success: false,
+                        message: 'Password salah!'
+                    };
+                }
+
+                if (username === 'guru' && password === 'guru123') {
+                    return {
+                        success: true,
+                        user: {
+                            username: 'guru',
+                            email: 'guru@sekolah.com',
+                            name: 'Guru Mata Pelajaran',
+                            role: 'guru'
+                        },
+                        message: 'Login Guru berhasil!'
+                    };
+                }
+            }
+
+            const roleLabel = role === 'admin' ? 'Admin' : 'Guru';
+            return {
+                success: false,
+                message: `Username atau password ${roleLabel} salah!`
+            };
+        }
+
+        // ============================================================
+        // DOM REFERENCES
+        // ============================================================
+        const elements = {
+            alert: document.getElementById('loginAlert'),
+            alertIcon: document.querySelector('.alert-icon'),
+            alertMessage: document.querySelector('.alert-message'),
+            roleBtns: document.querySelectorAll('.role-btn'),
+            username: document.getElementById('username'),
+            password: document.getElementById('password'),
+            remember: document.getElementById('remember'),
+            loginForm: document.getElementById('loginForm'),
+            loginBtn: document.getElementById('loginBtn'),
+            btnText: document.querySelector('.btn-text'),
+            spinner: document.querySelector('.spinner'),
+            togglePasswordBtn: document.querySelector('.toggle-password')
+        };
+
+        // ============================================================
+        // TOAST NOTIFICATION
+        // ============================================================
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ============================================================
+        // ALERT FUNCTIONS
+        // ============================================================
+        function showAlert(type, message) {
+            const icons = { error: '❌', success: '✅', info: 'ℹ️' };
+            elements.alert.className = `login-alert show login-alert-${type}`;
+            elements.alertIcon.textContent = icons[type] || 'ℹ️';
+            elements.alertMessage.textContent = message;
+
+            if (type === 'success' || type === 'info') {
+                setTimeout(hideAlert, 5000);
+            }
+        }
+
+        function hideAlert() {
+            elements.alert.className = 'login-alert';
+            elements.alertIcon.textContent = '';
+            elements.alertMessage.textContent = '';
+        }
+
+        function clearErrors() {
+            elements.username.classList.remove('error');
+            elements.password.classList.remove('error');
+        }
+
+        // ============================================================
+        // SELECT ROLE
+        // ============================================================
+        function selectRole(role) {
+            selectedRole = role;
+
+            elements.roleBtns.forEach(btn => {
+                btn.classList.remove('active-admin', 'active-guru');
+                if (btn.dataset.role === role) {
+                    btn.classList.add(role === 'admin' ? 'active-admin' : 'active-guru');
+                }
+            });
+
+            hideAlert();
+            clearErrors();
+            elements.username.focus();
+
+            if (role === 'admin') {
+                elements.username.placeholder = 'Masukkan username admin';
+            } else {
+                elements.username.placeholder = 'Masukkan username guru';
+            }
+
+            console.log(`📌 Role dipilih: ${role}`);
+        }
+
+        // ============================================================
+        // TOGGLE PASSWORD
+        // ============================================================
+        function togglePassword() {
+            const input = elements.password;
+            const btn = elements.togglePasswordBtn;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+                btn.title = 'Sembunyikan password';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+                btn.title = 'Tampilkan password';
+            }
+        }
+
+        // ============================================================
+        // AUTO-FILL DEMO
+        // ============================================================
+        function fillDemoAccount(role) {
+            const users = getUsersFromStorage();
+            const user = users.find(u => u.role === role && u.status === 'active');
+
+            if (user) {
+                selectRole(role);
+                elements.username.value = user.username;
+                elements.password.value = user.password;
+                clearErrors();
+                hideAlert();
+                showToast('info', `📝 Akun ${role === 'admin' ? 'Admin' : 'Guru'} telah diisi!`);
+                setTimeout(() => {
+                    elements.password.focus();
+                }, 100);
+                return;
+            }
+
+            if (role === 'admin') {
+                selectRole('admin');
+                elements.username.value = 'admin';
+                elements.password.value = 'admin123';
+            } else {
+                selectRole('guru');
+                elements.username.value = 'guru';
+                elements.password.value = 'guru123';
+            }
+
+            clearErrors();
+            hideAlert();
+            showToast('info', `📝 Akun ${role === 'admin' ? 'Admin' : 'Guru'} (default) telah diisi!`);
+            setTimeout(() => {
+                elements.password.focus();
+            }, 100);
+        }
+
+        // ============================================================
+        // LOADING STATE
+        // ============================================================
+        function startLoading() {
+            isLoggingIn = true;
+            elements.loginBtn.classList.add('loading');
+            elements.loginBtn.disabled = true;
+        }
+
+        function stopLoading() {
+            isLoggingIn = false;
+            elements.loginBtn.classList.remove('loading');
+            elements.loginBtn.disabled = false;
+        }
+
+        // ============================================================
+        // HANDLE LOGIN
+        // ============================================================
+        function handleLogin(event) {
+            event.preventDefault();
+
+            if (isLoggingIn) return;
+
+            const username = elements.username.value.trim();
+            const password = elements.password.value.trim();
+            const remember = elements.remember.checked;
+
+            if (!username) {
+                showAlert('error', '⚠️ Username atau email harus diisi!');
+                elements.username.classList.add('error');
+                elements.username.focus();
+                return;
+            }
+
+            if (!password) {
+                showAlert('error', '⚠️ Password harus diisi!');
+                elements.password.classList.add('error');
+                elements.password.focus();
+                return;
+            }
+
+            clearErrors();
+            startLoading();
+
+            console.log(`🔐 Mencoba login sebagai ${selectedRole}: ${username}`);
+
+            setTimeout(() => {
+                const result = authenticate(username, password, selectedRole);
+
+                if (result.success) {
+                    showAlert('success', `✅ ${result.message}`);
+
+                    const sessionData = {
+                        user: result.user,
+                        loginTime: new Date().toISOString(),
+                        remember: remember
+                    };
+
+                    if (remember) {
+                        localStorage.setItem('userSession', JSON.stringify(sessionData));
+                    } else {
+                        sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+                    }
+
+                    showToast('success', `✅ Selamat datang, ${result.user.name}!`);
+
+                    setTimeout(() => {
+                        if (result.user.role === 'admin') {
+                            window.location.href = '../src/admin/dashboard.html';
+                        } else {
+                            window.location.href = '../src/guru/dashboard.html';
+                        }
+                    }, 1200);
+
+                } else {
+                    showAlert('error', `❌ ${result.message}`);
+                    stopLoading();
+
+                    elements.username.classList.add('error');
+                    elements.password.classList.add('error');
+
+                    setTimeout(clearErrors, 600);
+                }
+            }, 1500);
+        }
+
+        // ============================================================
+        // HANDLER LAINNYA
+        // ============================================================
+        function showForgotPassword(event) {
+            event.preventDefault();
+            showAlert('info', '📧 Link reset password akan dikirim ke email Anda.');
+        }
+
+        function showRegister(event) {
+            event.preventDefault();
+            showAlert('info', '📝 Silakan hubungi administrator untuk pendaftaran akun.');
+        }
+
+        // ============================================================
+        // KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                e.preventDefault();
+                selectRole('admin');
+            }
+            if (e.ctrlKey && e.shiftKey && e.key === 'G') {
+                e.preventDefault();
+                selectRole('guru');
+            }
+            if (e.key === 'Escape') {
+                hideAlert();
+                clearErrors();
+            }
+
+            if (e.key === 'Enter') {
+                const active = document.activeElement;
+                if (active && active.tagName === 'INPUT') {
+                    elements.loginForm.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+
+        // ============================================================
+        // AUTO LOGIN
+        // ============================================================
+        function checkAutoLogin() {
+            let session = sessionStorage.getItem('userSession');
+            if (!session) session = localStorage.getItem('userSession');
+
+            if (session) {
+                try {
+                    const data = JSON.parse(session);
+                    if (data.user && data.user.role) {
+                        console.log(`🔄 Auto login sebagai: ${data.user.name}`);
+                        if (data.user.role === 'admin') {
+                            window.location.href = '../src/admin/dashboard.html';
+                        } else {
+                            window.location.href = '../src/guru/dashboard.html';
+                        }
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('❌ Error parsing session:', e);
+                }
+            }
+            return false;
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        if (!checkAutoLogin()) {
+            console.log('🔐 Silakan login terlebih dahulu');
+            console.log('📌 Role default: Admin');
+            console.log('💡 Shortcut: Ctrl+Shift+A (Admin) | Ctrl+Shift+G (Guru)');
+            console.log('⌨️  Escape: Tutup alert');
+            console.log('');
+
+            const users = getUsersFromStorage();
+            if (users.length > 0) {
+                console.log('👤 User tersedia di localStorage:');
+                users.forEach(u => {
+                    console.log(`  - ${u.username} (${u.role}) - ${u.status === 'active' ? '✅ Aktif' : '⏸ Nonaktif'}`);
+                });
+            } else {
+                console.log('👤 Belum ada user di localStorage, gunakan akun default');
+                console.log('  - Admin: admin / admin123');
+                console.log('  - Guru: guru / guru123');
+            }
+        }
+
+        setTimeout(() => {
+            elements.username.focus();
+        }, 300);
+
+        console.log('✅ Login page loaded successfully');
+        console.log(`📅 ${new Date().toLocaleString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`);
+
+        // ============================================================
+        // EXPOSE FOR CONSOLE DEBUGGING
+        // ============================================================
+        window.__login = {
+            getUsersFromStorage: getUsersFromStorage,
+            authenticate: authenticate,
+            selectedRole: () => selectedRole
+        };
+
+        console.log('🔧 Type __login in console untuk debugging');
+    </script>
+
+</body>
+</html>

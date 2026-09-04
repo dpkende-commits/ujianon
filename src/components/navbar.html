@@ -1,0 +1,165 @@
+<!-- ============================================================
+     NAVBAR COMPONENT - Ujian Online System
+     ============================================================ -->
+
+<nav class="navbar" id="mainNavbar">
+    <div class="navbar-container">
+        <!-- Brand -->
+        <div class="navbar-brand">
+            <a href="../../public/index.html" class="brand-link">
+                <span class="brand-icon">📚</span>
+                <span class="brand-text">Ujian<span>Online</span></span>
+            </a>
+        </div>
+
+        <!-- Hamburger Toggle (Mobile) -->
+        <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+
+        <!-- Navbar Menu -->
+        <div class="navbar-menu" id="navbarMenu">
+            <ul class="navbar-nav">
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" id="navDashboard">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- Dropdown: Ujian -->
+                <li class="nav-item dropdown">
+                    <button class="nav-link dropdown-toggle" onclick="toggleDropdown('ujianDropdown')">
+                        <span class="nav-icon">📝</span>
+                        <span class="nav-text">Ujian</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <ul class="dropdown-menu" id="ujianDropdown">
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">📋</span> Semua Ujian</a></li>
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">➕</span> Buat Ujian</a></li>
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">📊</span> Hasil Ujian</a></li>
+                    </ul>
+                </li>
+
+                <!-- Dropdown: Soal -->
+                <li class="nav-item dropdown">
+                    <button class="nav-link dropdown-toggle" onclick="toggleDropdown('soalDropdown')">
+                        <span class="nav-icon">📖</span>
+                        <span class="nav-text">Soal</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <ul class="dropdown-menu" id="soalDropdown">
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">🗂️</span> Bank Soal</a></li>
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">➕</span> Tambah Soal</a></li>
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">📊</span> Kategori Soal</a></li>
+                    </ul>
+                </li>
+
+                <!-- Dropdown: Kelas -->
+                <li class="nav-item dropdown">
+                    <button class="nav-link dropdown-toggle" onclick="toggleDropdown('kelasDropdown')">
+                        <span class="nav-icon">🏫</span>
+                        <span class="nav-text">Kelas</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <ul class="dropdown-menu" id="kelasDropdown">
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">📋</span> Daftar Kelas</a></li>
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">👨‍🏫</span> Guru Kelas</a></li>
+                        <li><a href="#" class="dropdown-item"><span class="dropdown-item-icon">📊</span> Statistik Kelas</a></li>
+                    </ul>
+                </li>
+
+                <!-- Admin Menu (hanya untuk admin) -->
+                <li class="nav-item admin-only" id="adminMenu">
+                    <a href="#" class="nav-link" id="navAdmin">
+                        <span class="nav-icon">👑</span>
+                        <span class="nav-text">Admin</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Right Side -->
+            <div class="navbar-right">
+                <!-- Notification -->
+                <div class="nav-notification" onclick="toggleNotification()">
+                    <span class="notification-icon">🔔</span>
+                    <span class="notification-badge" id="notifBadge">3</span>
+                    <div class="notification-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <span>Notifikasi</span>
+                            <a href="#" onclick="event.preventDefault();">Tandai semua</a>
+                        </div>
+                        <div class="notif-list">
+                            <div class="notif-item">
+                                <span class="notif-icon">📝</span>
+                                <div class="notif-content">
+                                    <p>Ujian baru telah dibuat</p>
+                                    <small>5 menit lalu</small>
+                                </div>
+                            </div>
+                            <div class="notif-item">
+                                <span class="notif-icon">✅</span>
+                                <div class="notif-content">
+                                    <p>Soal berhasil diupload</p>
+                                    <small>1 jam lalu</small>
+                                </div>
+                            </div>
+                            <div class="notif-item">
+                                <span class="notif-icon">⚠️</span>
+                                <div class="notif-content">
+                                    <p>Ujian akan segera dimulai</p>
+                                    <small>3 jam lalu</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="notif-footer">
+                            <a href="#" onclick="event.preventDefault();">Lihat semua notifikasi</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile -->
+                <div class="nav-user" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        <span id="userInitial">A</span>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Administrator</span>
+                        <span class="user-role" id="userRole">Admin</span>
+                    </div>
+                    <span class="user-arrow">▼</span>
+
+                    <!-- User Dropdown -->
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-dropdown-header">
+                            <div class="user-dropdown-avatar">
+                                <span id="dropdownUserInitial">A</span>
+                            </div>
+                            <div>
+                                <div class="user-dropdown-name" id="dropdownUserName">Administrator</div>
+                                <div class="user-dropdown-role" id="dropdownUserRole">Admin</div>
+                            </div>
+                        </div>
+                        <div class="user-dropdown-divider"></div>
+                        <a href="#" class="user-dropdown-item">
+                            <span class="item-icon">👤</span> Profil Saya
+                        </a>
+                        <a href="#" class="user-dropdown-item">
+                            <span class="item-icon">⚙️</span> Pengaturan
+                        </a>
+                        <a href="#" class="user-dropdown-item">
+                            <span class="item-icon">❓</span> Bantuan
+                        </a>
+                        <div class="user-dropdown-divider"></div>
+                        <a href="../../public/login.html" class="user-dropdown-item logout-item" onclick="handleLogout(event)">
+                            <span class="item-icon">🚪</span> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

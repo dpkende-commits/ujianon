@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guru Dashboard - Ujian Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../public/css/style.css">
+    <link rel="stylesheet" href="../../public/css/navbar.css">
+    <link rel="stylesheet" href="../../public/css/guru.css">
+    <style>
+        /* Navbar Styles */
+        body {
+            background: #f0f4f8;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar-placeholder {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            color: white;
+        }
+
+        .navbar-placeholder .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .navbar-placeholder .brand span {
+            color: #34d399;
+        }
+
+        .navbar-placeholder .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .navbar-placeholder .nav-right .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #059669, #047857);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+        }
+
+        .navbar-placeholder .nav-right .btn-logout-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85em;
+            border: 1px solid rgba(239, 68, 68, 0.1);
+        }
+
+        .navbar-placeholder .nav-right .btn-logout-nav:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85em;
+            z-index: 9999;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            max-width: 380px;
+            min-width: 220px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast .toast-icon { font-size: 1.3em; flex-shrink: 0; }
+        .toast .toast-message { flex: 1; line-height: 1.4; }
+        .toast .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 4px;
+            transition: color 0.3s ease;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        .toast .toast-close:hover { color: white; }
+
+        .toast.success { background: linear-gradient(135deg, #059669, #047857); }
+        .toast.error { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .toast.warning { background: linear-gradient(135deg, #d97706, #b45309); }
+        .toast.info { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+
+        .status-badge {
+            font-size: 0.7em;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .status-badge.lulus { background: #d1fae5; color: #059669; }
+        .status-badge.tidak-lulus { background: #fee2e2; color: #dc2626; }
+        .status-badge.pending { background: #fef3c7; color: #d97706; }
+
+        .exam-badge {
+            font-size: 0.6em;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .exam-badge.pretest { background: #dbeafe; color: #1d4ed8; }
+        .exam-badge.posttest { background: #d1fae5; color: #059669; }
+
+        @media (max-width: 768px) {
+            .navbar-placeholder .brand { font-size: 0.9em; }
+            .navbar-placeholder .nav-right span { display: none; }
+            .navbar-placeholder .nav-right .btn-logout-nav .logout-text { display: none; }
+            .navbar-placeholder .nav-right .btn-logout-nav { padding: 6px 14px; font-size: 0.75em; }
+            .navbar-placeholder .nav-right .btn-logout-nav .logout-icon { font-size: 1.2em; }
+            .navbar-placeholder .nav-right .user-avatar { width: 32px; height: 32px; font-size: 0.8em; }
+            .toast { bottom: 20px; right: 20px; left: 20px; max-width: none; padding: 10px 16px; font-size: 0.8em; min-width: unset; }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-placeholder { padding: 0 12px; height: 54px; }
+            .navbar-placeholder .brand { font-size: 0.85em; gap: 6px; }
+            .navbar-placeholder .brand .brand-icon { font-size: 1.2em; }
+            .navbar-placeholder .nav-right { gap: 10px; }
+            .navbar-placeholder .nav-right .user-avatar { width: 28px; height: 28px; font-size: 0.7em; }
+            .navbar-placeholder .nav-right .btn-logout-nav { padding: 4px 10px; border-radius: 6px; }
+            .navbar-placeholder .nav-right .btn-logout-nav .logout-icon { font-size: 1em; }
+            .toast { bottom: 16px; right: 16px; left: 16px; padding: 8px 12px; font-size: 0.75em; border-radius: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+    TOAST NOTIFICATION
+    ============================================================ -->
+    <div class="toast" id="toast">
+        <span class="toast-icon"></span>
+        <span class="toast-message"></span>
+        <button class="toast-close" onclick="this.closest('.toast').classList.remove('show')">✕</button>
+    </div>
+
+    <!-- ============================================================
+    NAVBAR
+    ============================================================ -->
+    <nav class="navbar-placeholder">
+        <div class="brand">📚 Ujian<span>Online</span></div>
+        <div class="nav-right">
+            <span style="color:#94a3b8;font-size:0.85em;" id="guruNameNav">Guru</span>
+            <div class="user-avatar" id="guruAvatarNav">G</div>
+            <button class="btn-logout-nav" onclick="handleLogout()">
+                <span class="logout-icon">🚪</span>
+                <span class="logout-text">Logout</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+    DASHBOARD CONTENT
+    ============================================================ -->
+    <div class="guru-dashboard">
+
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1>👨‍🏫 Guru <span>Dashboard</span></h1>
+                <p>Kelola ujian pretest dan posttest</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="printSertifikat()">📜 Cetak Sertifikat</button>
+                <button class="btn btn-warning" onclick="printHasil()">🖨️ Cetak Hasil</button>
+                <button class="btn btn-outline" onclick="location.reload()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <!-- ===== TAB NAVIGATION (2 Halaman) ===== -->
+        <div class="tab-navigation-guru">
+            <button class="tab-btn-guru active" data-tab="test" onclick="switchTab('test')">📋 Test</button>
+            <button class="tab-btn-guru" data-tab="ujian" onclick="switchTab('ujian')">📝 Ujian</button>
+        </div>
+
+        <!-- ===== TAB: TEST (Profil + Soal) ===== -->
+        <div class="tab-panel-guru active" id="tab-test">
+
+            <!-- Profile Card -->
+            <div class="profile-card">
+                <div class="profile-avatar" id="guruAvatar">A</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="guruName">-</div>
+                    <div class="profile-role" id="guruMapel">📖 -</div>
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <span class="detail-label">NIP</span>
+                            <span class="detail-value" id="guruNip">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">NUPTK</span>
+                            <span class="detail-value" id="guruNuptk">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">TTL</span>
+                            <span class="detail-value" id="guruTempatLahir">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Sekolah</span>
+                            <span class="detail-value" id="guruSekolah">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exam Status -->
+            <div class="exam-status-grid">
+                <div class="exam-status-card">
+                    <div class="exam-status-header">
+                        <div class="exam-title">
+                            <span class="exam-icon">📋</span>
+                            <h3>Pretest</h3>
+                        </div>
+                        <span class="exam-status-badge" id="pretestBadge">Menunggu</span>
+                    </div>
+                    <div class="exam-status-body">
+                        <div class="exam-stat">
+                            <div class="exam-stat-number" id="pretestCount">0</div>
+                            <div class="exam-stat-label">Total Soal</div>
+                        </div>
+                        <div class="exam-stat">
+                            <div class="exam-stat-number" id="pretestAktif">0</div>
+                            <div class="exam-stat-label">Status</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="exam-status-card">
+                    <div class="exam-status-header">
+                        <div class="exam-title">
+                            <span class="exam-icon">📝</span>
+                            <h3>Posttest</h3>
+                        </div>
+                        <span class="exam-status-badge" id="posttestBadge">Menunggu</span>
+                    </div>
+                    <div class="exam-status-body">
+                        <div class="exam-stat">
+                            <div class="exam-stat-number" id="posttestCount">0</div>
+                            <div class="exam-stat-label">Total Soal</div>
+                        </div>
+                        <div class="exam-stat">
+                            <div class="exam-stat-number" id="posttestAktif">0</div>
+                            <div class="exam-stat-label">Status</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soal List -->
+            <div class="soal-list">
+                <div class="soal-list-header">
+                    <h3>📝 Daftar Soal Ujian</h3>
+                    <div class="soal-status-filter">
+                        <button class="filter-btn active" data-filter="all" onclick="filterSoal('all')">Semua</button>
+                        <button class="filter-btn" data-filter="pretest" onclick="filterSoal('pretest')">Pretest</button>
+                        <button class="filter-btn" data-filter="posttest" onclick="filterSoal('posttest')">Posttest</button>
+                    </div>
+                </div>
+                <div id="pretestSoalList"></div>
+                <div id="posttestSoalList"></div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: UJIAN ===== -->
+        <div class="tab-panel-guru" id="tab-ujian">
+            <div class="ujian-container" id="ujianContainer">
+                <!-- Generated by JavaScript -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script src="../../public/js/guru.js"></script>
+
+</body>
+</html>

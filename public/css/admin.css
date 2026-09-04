@@ -1,0 +1,2420 @@
+/* ============================================================
+   FILE: admin.css
+   DESKRIPSI: Style khusus untuk Dashboard Admin
+   VERSI: 3.0.0
+   ============================================================ */
+
+/* ============================================================
+   1. ROOT VARIABLES (Variabel Global)
+   ============================================================ */
+:root {
+    /* Warna Utama */
+    --primary: #7c3aed;
+    --primary-dark: #5b21b6;
+    --primary-light: #a78bfa;
+    --primary-bg: rgba(124, 58, 237, 0.08);
+    
+    /* Warna Status */
+    --success: #059669;
+    --success-bg: rgba(5, 150, 105, 0.08);
+    --danger: #dc2626;
+    --danger-bg: rgba(220, 38, 38, 0.08);
+    --warning: #d97706;
+    --warning-bg: rgba(217, 119, 6, 0.08);
+    --info: #2563eb;
+    --info-bg: rgba(37, 99, 235, 0.08);
+    
+    /* Warna Tampilan */
+    --bg-body: #f0f4f8;
+    --bg-card: #ffffff;
+    --text-primary: #1a2a3a;
+    --text-secondary: #6b7a8a;
+    --text-muted: #8a9aa8;
+    --border-color: #eef2f7;
+    
+    /* Shadow */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.12);
+    
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    
+    /* Transisi */
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.25s ease;
+    --transition-slow: 0.4s ease;
+}
+
+/* ============================================================
+   2. RESET & BASE (Reset Dasar)
+   ============================================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg-body);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ============================================================
+   3. DASHBOARD LAYOUT (Layout Utama Dashboard)
+   ============================================================ */
+.admin-dashboard {
+    padding: 24px 32px;
+    max-width: 1440px;
+    margin: 80px auto 30px;
+    animation: fadeInDashboard 0.5s ease;
+}
+
+/* Animasi Fade In untuk Dashboard */
+@keyframes fadeInDashboard {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================
+   4. NAVBAR (Navigasi Atas)
+   ============================================================ */
+.navbar-placeholder {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    color: white;
+}
+
+/* Brand/Logo di Navbar */
+.navbar-placeholder .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+.navbar-placeholder .brand span {
+    color: #a78bfa;
+}
+
+/* Bagian Kanan Navbar */
+.navbar-placeholder .nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Avatar User di Navbar */
+.navbar-placeholder .nav-right .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    font-size: 0.9em;
+}
+
+/* ============================================================
+   5. LOGOUT BUTTON (Tombol Keluar)
+   ============================================================ */
+.navbar-placeholder .nav-right .btn-logout-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all var(--transition-base);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85em;
+    border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.navbar-placeholder .nav-right .btn-logout-nav:hover {
+    background: rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
+}
+
+.navbar-placeholder .nav-right .btn-logout-nav:active {
+    transform: translateY(0);
+}
+
+.navbar-placeholder .nav-right .btn-logout-nav .logout-icon {
+    font-size: 1.1em;
+}
+
+.navbar-placeholder .nav-right .btn-logout-nav .logout-text {
+    font-weight: 600;
+}
+
+/* ============================================================
+   6. DASHBOARD HEADER (Header Dashboard)
+   ============================================================ */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 20px 24px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Judul Header */
+.dashboard-header .header-left h1 {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.dashboard-header .header-left h1 span {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Subtitle Header */
+.dashboard-header .header-left p {
+    color: var(--text-secondary);
+    font-size: 0.88em;
+}
+
+/* ============================================================
+   7. BUTTONS (Tombol-tombol Aksi)
+   ============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82em;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* Tombol Primary (Ungu) */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+}
+
+/* Tombol Success (Hijau) */
+.btn-success {
+    background: linear-gradient(135deg, var(--success), #047857);
+    color: white;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3);
+}
+
+/* Tombol Warning (Kuning) */
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning), #b45309);
+    color: white;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(217, 119, 6, 0.3);
+}
+
+/* Tombol Danger (Merah) */
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #b91c1c);
+    color: white;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+}
+
+/* Tombol Outline (Transparan) */
+.btn-outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-color);
+}
+
+.btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-bg);
+    transform: translateY(-2px);
+}
+
+/* Ukuran Tombol */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.75em;
+    border-radius: var(--radius-sm);
+}
+
+.btn-xs {
+    padding: 4px 10px;
+    font-size: 0.7em;
+    border-radius: 4px;
+}
+
+/* ============================================================
+   8. STORAGE INFO (Informasi Penyimpanan)
+   ============================================================ */
+.storage-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.storage-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78em;
+    color: var(--text-muted);
+}
+
+/* Dot Indikator Warna */
+.storage-info .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.storage-info .dot.green { background: var(--success); }
+.storage-info .dot.blue { background: var(--info); }
+.storage-info .dot.purple { background: var(--primary); }
+
+.storage-info strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* ============================================================
+   9. STATS GRID (Grid Statistik)
+   ============================================================ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+/* Kartu Statistik */
+.stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(124, 58, 237, 0.15);
+}
+
+/* Garis Warna di Atas Kartu */
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.stat-card:nth-child(1)::before { background: var(--primary); }
+.stat-card:nth-child(2)::before { background: var(--info); }
+.stat-card:nth-child(3)::before { background: var(--success); }
+.stat-card:nth-child(4)::before { background: var(--warning); }
+.stat-card:nth-child(5)::before { background: var(--danger); }
+.stat-card:nth-child(6)::before { background: #8b5cf6; }
+
+/* Header Kartu Statistik */
+.stat-card .stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+}
+
+.stat-card .stat-icon {
+    font-size: 1.6em;
+    line-height: 1;
+}
+
+/* Indikator Perubahan (Naik/Turun) */
+.stat-card .stat-change {
+    font-size: 0.6em;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.stat-change.up { background: var(--success-bg); color: var(--success); }
+.stat-change.down { background: var(--danger-bg); color: var(--danger); }
+.stat-change.neutral { background: var(--warning-bg); color: var(--warning); }
+
+/* Angka Statistik */
+.stat-card .stat-number {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 2px 0 1px;
+    line-height: 1.2;
+}
+
+/* Label Statistik */
+.stat-card .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+/* Detail Statistik (Bawah) */
+.stat-card .stat-detail {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.7em;
+    color: var(--text-muted);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stat-card .stat-detail span {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ============================================================
+   10. TAB NAVIGATION (Navigasi Tab)
+   ============================================================ */
+.tab-navigation {
+    display: flex;
+    gap: 4px;
+    margin: 20px 0;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Tombol Tab */
+.tab-navigation .tab-btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.82em;
+    transition: all var(--transition-base);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    flex: 1;
+    text-align: center;
+    min-width: 100px;
+}
+
+.tab-navigation .tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Tab Aktif */
+.tab-navigation .tab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 12px rgba(124, 58, 237, 0.25);
+}
+
+/* Panel Tab */
+.tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* Animasi Fade In Tab */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================
+   11. SECTION TITLE (Judul Section)
+   ============================================================ */
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0 14px;
+}
+
+.section-title h2 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ============================================================
+   12. TABLE WRAPPER (Pembungkus Tabel)
+   ============================================================ */
+.table-wrapper {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Header Tabel */
+.table-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #fafbfc;
+}
+
+.table-header h3 {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Search & Filter di Tabel */
+.table-header .table-search {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Group Search */
+.table-header .table-search .search-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.table-header .table-search .search-group .search-icon {
+    position: absolute;
+    left: 10px;
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+/* Input Search */
+.table-header .table-search .search-group input {
+    padding: 7px 12px 7px 32px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.82em;
+    outline: none;
+    transition: all var(--transition-base);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    min-width: 180px;
+    background: white;
+    color: var(--text-primary);
+}
+
+.table-header .table-search .search-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.06);
+}
+
+/* Select Filter */
+.table-header .table-search select {
+    padding: 7px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.82em;
+    outline: none;
+    transition: all var(--transition-base);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: white;
+    color: var(--text-primary);
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.table-header .table-search select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.06);
+}
+
+/* ============================================================
+   13. TABLE STYLES (Style Tabel)
+   ============================================================ */
+.table-scroll {
+    overflow-x: auto;
+}
+
+/* Tabel Dasar */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85em;
+}
+
+/* Header Tabel */
+table thead {
+    background: #f8fafc;
+}
+
+table th {
+    padding: 10px 16px;
+    text-align: left;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+/* Sel Tabel */
+table td {
+    padding: 10px 16px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+/* Hover Row */
+table tbody tr {
+    transition: background var(--transition-fast);
+}
+
+table tbody tr:hover td {
+    background: #fafbfc;
+}
+
+table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Footer Tabel */
+.table-footer {
+    padding: 10px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: #fafbfc;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.table-footer .table-info {
+    font-size: 0.78em;
+    color: var(--text-muted);
+}
+
+.table-footer .table-info strong {
+    color: var(--text-primary);
+}
+
+/* ============================================================
+   14. BADGES (Label Status)
+   ============================================================ */
+/* Badge Role User */
+.user-role-badge {
+    font-size: 0.65em;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+    min-width: 55px;
+}
+
+.user-role-badge.admin {
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+.user-role-badge.guru {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+/* Badge Status User */
+.user-status-badge {
+    font-size: 0.6em;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+}
+
+.user-status-badge.active {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.user-status-badge.inactive {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+/* Badge Jenis Ujian */
+.exam-badge {
+    font-size: 0.6em;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.exam-badge.pretest {
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+.exam-badge.posttest {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+/* Badge Status Kelulusan */
+.status-badge {
+    font-size: 0.65em;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.status-badge.lulus {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.status-badge.tidak-lulus {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.status-badge.pending {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+/* ============================================================
+   15. ACTION BUTTONS (Tombol Aksi di Tabel)
+   ============================================================ */
+.action-btns {
+    display: flex;
+    gap: 4px;
+}
+
+/* Tombol Icon di Tabel */
+.action-btns .btn-icon {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tombol Edit */
+.btn-icon.edit {
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+.btn-icon.edit:hover {
+    background: var(--info);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Tombol View */
+.btn-icon.view {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.btn-icon.view:hover {
+    background: var(--success);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Tombol Delete */
+.btn-icon.delete {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.btn-icon.delete:hover {
+    background: var(--danger);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* ============================================================
+   16. USER AVATAR (Avatar di Tabel)
+   ============================================================ */
+.user-avatar-small {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.65em;
+    flex-shrink: 0;
+}
+
+.user-avatar-small.admin-avatar {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.user-avatar-small.guru-avatar {
+    background: linear-gradient(135deg, var(--success), #047857);
+}
+
+/* Informasi User di Tabel */
+.user-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-info-cell .user-name-cell {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-info-cell .user-id-cell {
+    font-size: 0.7em;
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   17. GURU DETAIL CELL (Data Guru di Tabel)
+   ============================================================ */
+.guru-detail-cell {
+    font-size: 0.78em;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.guru-detail-cell .guru-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.guru-detail-cell .guru-row .guru-label {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 0.7em;
+    min-width: 32px;
+}
+
+.guru-detail-cell .guru-row .guru-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.8em;
+}
+
+.guru-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+/* ============================================================
+   18. EMPTY STATE (Tampilan Kosong)
+   ============================================================ */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state .empty-icon {
+    font-size: 2.8em;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.empty-state .empty-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.empty-state .empty-desc {
+    font-size: 0.82em;
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   19. EXAM CARDS (Kartu Ujian Pretest & Posttest)
+   ============================================================ */
+.exam-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+/* Kartu Ujian */
+.exam-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.exam-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* Header Kartu */
+.exam-card .exam-header {
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    background: #fafbfc;
+}
+
+.exam-card .exam-header .exam-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.exam-card .exam-header .exam-title .exam-icon {
+    font-size: 1.4em;
+}
+
+.exam-card .exam-header .exam-title h3 {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Status Ujian (Aktif/Draft) */
+.exam-card .exam-header .exam-status {
+    font-size: 0.65em;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.exam-status.active {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.exam-status.draft {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+/* Body Kartu */
+.exam-card .exam-body {
+    padding: 16px 20px;
+}
+
+.exam-card .exam-body .exam-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+/* Statistik di Kartu */
+.exam-card .exam-body .exam-stats .exam-stat {
+    text-align: center;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: var(--radius-sm);
+}
+
+.exam-card .exam-body .exam-stats .exam-stat .exam-stat-number {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.exam-card .exam-body .exam-stats .exam-stat .exam-stat-label {
+    font-size: 0.65em;
+    color: var(--text-muted);
+}
+
+/* Footer Kartu */
+.exam-card .exam-footer {
+    padding: 10px 20px;
+    background: #fafbfc;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+/* ============================================================
+   20. SCORE CHART (Grafik Nilai Peserta)
+   ============================================================ */
+.score-chart {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Header Chart */
+.score-chart .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.score-chart .chart-header h3 {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Bar Chart */
+.score-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Item Bar */
+.score-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    animation: fadeInBar 0.5s ease forwards;
+    opacity: 0;
+}
+
+.score-bar-item:hover {
+    background: #f8fafc;
+}
+
+/* Track Bar */
+.score-bar-item .score-track {
+    flex: 1;
+    height: 6px;
+    background: #eef2f7;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Fill Bar */
+.score-bar-item .score-track .score-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s ease;
+}
+
+/* Animasi Bar */
+@keyframes fadeInBar {
+    from {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Legend Chart */
+.chart-legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.chart-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7em;
+    color: var(--text-secondary);
+}
+
+.chart-legend .legend-item .legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+/* Empty Chart */
+.empty-chart {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   21. HASIL UJIAN (Hasil Ujian Guru)
+   ============================================================ */
+.hasil-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* Kartu Statistik Hasil Ujian */
+.hasil-stat-card {
+    background: var(--bg-card);
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.hasil-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.hasil-stat-card .stat-label {
+    font-size: 0.6em;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.hasil-stat-card .stat-number {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 2px;
+}
+
+/* Warna Statistik */
+.hasil-stat-card .stat-number.green { color: var(--success); }
+.hasil-stat-card .stat-number.red { color: var(--danger); }
+.hasil-stat-card .stat-number.blue { color: var(--info); }
+
+/* ============================================================
+   22. TOAST NOTIFICATION (Notifikasi Popup)
+   ============================================================ */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 14px 24px;
+    border-radius: var(--radius-md);
+    color: white;
+    font-weight: 600;
+    font-size: 0.9em;
+    z-index: 9999;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    box-shadow: var(--shadow-xl);
+    max-width: 400px;
+    min-width: 250px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Icon Toast */
+.toast .toast-icon {
+    font-size: 1.4em;
+    flex-shrink: 0;
+}
+
+.toast .toast-message {
+    flex: 1;
+    line-height: 1.4;
+}
+
+/* Tombol Close Toast */
+.toast .toast-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 4px;
+    transition: color var(--transition-base);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.toast .toast-close:hover {
+    color: white;
+}
+
+/* Warna Toast */
+.toast.success {
+    background: linear-gradient(135deg, var(--success), #047857);
+}
+
+.toast.error {
+    background: linear-gradient(135deg, var(--danger), #b91c1c);
+}
+
+.toast.warning {
+    background: linear-gradient(135deg, var(--warning), #b45309);
+}
+
+.toast.info {
+    background: linear-gradient(135deg, var(--info), #1d4ed8);
+}
+
+/* ============================================================
+   23. MODAL (Popup Form)
+   ============================================================ */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+/* Konten Modal */
+.modal {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 32px 36px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlide 0.3s ease;
+    box-shadow: var(--shadow-xl);
+}
+
+/* Animasi Modal */
+@keyframes modalSlide {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Header Modal */
+.modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal .modal-header h2 {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Tombol Close Modal */
+.modal .modal-header .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color var(--transition-base);
+}
+
+.modal .modal-header .modal-close:hover {
+    color: var(--text-primary);
+}
+
+/* Form Group di Modal */
+.modal .form-group {
+    margin-bottom: 16px;
+}
+
+.modal .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.85em;
+}
+
+.modal .form-group label .required {
+    color: var(--danger);
+    margin-left: 2px;
+}
+
+/* Input dan Select di Modal */
+.modal .form-group input,
+.modal .form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.92em;
+    transition: all var(--transition-base);
+    outline: none;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: white;
+    color: var(--text-primary);
+}
+
+.modal .form-group input:focus,
+.modal .form-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.06);
+}
+
+/* Form Actions di Modal */
+.modal .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+/* ============================================================
+   24. UPLOAD AREA (Area Upload Soal)
+   ============================================================ */
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 40px 20px;
+    text-align: center;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    background: #fafbfc;
+}
+
+.upload-area:hover {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+}
+
+.upload-area.dragover {
+    border-color: var(--primary);
+    background: rgba(124, 58, 237, 0.1);
+}
+
+/* Icon Upload */
+.upload-area .upload-icon {
+    font-size: 3em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.upload-area .upload-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.upload-area .upload-desc {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.upload-area .upload-formats {
+    font-size: 0.75em;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+/* Tombol Upload */
+.upload-area .upload-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: 'Inter', sans-serif;
+}
+
+.upload-area .upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+}
+
+/* ============================================================
+   25. UPLOAD PROGRESS (Progress Upload)
+   ============================================================ */
+.upload-progress {
+    display: none;
+    margin-top: 16px;
+}
+
+.upload-progress.show {
+    display: block;
+}
+
+/* Progress Bar */
+.upload-progress .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.upload-progress .progress-bar .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.upload-progress .progress-text {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-top: 6px;
+    text-align: center;
+}
+
+/* ============================================================
+   26. PREVIEW SOAL (Preview Soal Upload)
+   ============================================================ */
+.soal-preview {
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+}
+
+.soal-preview .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.soal-preview .preview-header h4 {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.soal-preview .preview-count {
+    font-size: 0.8em;
+    color: var(--text-muted);
+}
+
+/* Item Preview */
+.preview-item {
+    background: #fafbfc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all var(--transition-base);
+}
+
+.preview-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+}
+
+.preview-item .preview-question {
+    flex: 1;
+    font-size: 0.9em;
+    color: var(--text-primary);
+}
+
+.preview-item .preview-question .q-number {
+    font-weight: 600;
+    color: var(--primary);
+    margin-right: 8px;
+}
+
+/* Tombol Aksi di Preview */
+.preview-item .preview-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.preview-item .preview-actions .btn-icon-sm {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-sm.edit-sm {
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+.btn-icon-sm.edit-sm:hover {
+    background: var(--info);
+    color: white;
+}
+
+.btn-icon-sm.delete-sm {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.btn-icon-sm.delete-sm:hover {
+    background: var(--danger);
+    color: white;
+}
+
+/* ============================================================
+   27. WORD INFO (Informasi Upload Word)
+   ============================================================ */
+.word-info {
+    background: var(--info-bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85em;
+    color: var(--info);
+}
+
+.word-info .info-icon {
+    font-size: 1.3em;
+}
+
+/* ============================================================
+   28. RESPONSIVE (Media Queries)
+   ============================================================ */
+
+/* Tablet (max-width: 1200px) */
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .hasil-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Tablet Kecil (max-width: 992px) */
+@media (max-width: 992px) {
+    .exam-grid {
+        grid-template-columns: 1fr;
+    }
+    .admin-dashboard {
+        padding: 16px;
+    }
+}
+
+/* Mobile (max-width: 768px) */
+@media (max-width: 768px) {
+    .admin-dashboard {
+        padding: 12px;
+        margin-top: 70px;
+    }
+
+    /* Header Mobile */
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px 18px;
+    }
+
+    .dashboard-header .header-actions {
+        width: 100%;
+    }
+
+    .dashboard-header .header-actions .btn {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.72em;
+        padding: 6px 10px;
+    }
+
+    /* Stats Grid Mobile */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stat-card .stat-number {
+        font-size: 1.4em;
+    }
+
+    /* Tab Navigation Mobile */
+    .tab-navigation .tab-btn {
+        font-size: 0.7em;
+        padding: 6px 10px;
+        min-width: 50px;
+    }
+
+    /* Table Mobile */
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .table-header .table-search {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .table-header .table-search .search-group {
+        width: 100%;
+    }
+
+    .table-header .table-search .search-group input {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .table-header .table-search select {
+        width: 100%;
+    }
+
+    .table-footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 6px;
+    }
+
+    /* Modal Mobile */
+    .modal {
+        padding: 20px 16px;
+    }
+
+    /* Exam Card Mobile */
+    .exam-card .exam-body .exam-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Hasil Stats Mobile */
+    .hasil-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .hasil-stat-card .stat-number {
+        font-size: 1.2em;
+    }
+
+    /* Storage Bar Mobile */
+    .storage-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    /* Score Bar Mobile */
+    .score-bar-item {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 8px;
+    }
+
+    .score-bar-item>div:first-child {
+        min-width: 60px;
+        width: 100%;
+    }
+
+    .score-bar-item>div:last-child {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .chart-legend {
+        justify-content: center;
+    }
+
+    /* Section Title Mobile */
+    .section-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    /* Action Buttons Mobile */
+    .action-btns {
+        flex-wrap: wrap;
+    }
+
+    /* Badge Mobile */
+    .user-status-badge,
+    .user-role-badge {
+        font-size: 0.55em;
+        padding: 2px 8px;
+        min-width: 40px;
+    }
+
+    /* Navbar Mobile */
+    .navbar-placeholder .nav-right span {
+        display: none;
+    }
+
+    .navbar-placeholder .nav-right .btn-logout-nav {
+        padding: 6px 14px;
+        font-size: 0.75em;
+    }
+
+    .navbar-placeholder .nav-right .btn-logout-nav .logout-text {
+        display: none;
+    }
+
+    .navbar-placeholder .nav-right .btn-logout-nav .logout-icon {
+        font-size: 1.2em;
+    }
+
+    .navbar-placeholder .nav-right .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8em;
+    }
+
+    /* Toast Mobile */
+    .toast {
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+        max-width: none;
+        padding: 12px 18px;
+        font-size: 0.82em;
+        min-width: unset;
+    }
+}
+
+/* Mobile Kecil (max-width: 480px) */
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 12px 14px;
+    }
+
+    .stat-card .stat-number {
+        font-size: 1.2em;
+    }
+
+    .stat-card .stat-icon {
+        font-size: 1.2em;
+    }
+
+    .stat-card .stat-detail {
+        font-size: 0.6em;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    /* Exam Card Mobile Kecil */
+    .exam-card .exam-body .exam-stats {
+        grid-template-columns: 1fr;
+    }
+
+    /* Hasil Stats Mobile Kecil */
+    .hasil-stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .hasil-stat-card {
+        padding: 8px 10px;
+    }
+
+    .hasil-stat-card .stat-number {
+        font-size: 1em;
+    }
+
+    .hasil-stat-card .stat-label {
+        font-size: 0.55em;
+    }
+
+    /* Table Mobile Kecil */
+    table {
+        font-size: 0.7em;
+    }
+
+    table th,
+    table td {
+        padding: 6px 8px;
+    }
+
+    /* Header Mobile Kecil */
+    .dashboard-header .header-left h1 {
+        font-size: 1.2em;
+    }
+
+    .btn {
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+
+    /* Tab Navigation Mobile Kecil */
+    .tab-navigation .tab-btn {
+        font-size: 0.65em;
+        padding: 4px 8px;
+        min-width: 40px;
+    }
+
+    /* Storage Info Mobile Kecil */
+    .storage-info {
+        font-size: 0.7em;
+    }
+
+    /* Navbar Mobile Kecil */
+    .navbar-placeholder {
+        padding: 0 12px;
+        height: 54px;
+    }
+
+    .navbar-placeholder .brand {
+        font-size: 0.85em;
+        gap: 6px;
+    }
+
+    .navbar-placeholder .brand .brand-icon {
+        font-size: 1.2em;
+    }
+
+    .navbar-placeholder .nav-right {
+        gap: 10px;
+    }
+
+    .navbar-placeholder .nav-right .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7em;
+    }
+
+    .navbar-placeholder .nav-right .btn-logout-nav {
+        padding: 4px 10px;
+        border-radius: var(--radius-sm);
+    }
+
+    .navbar-placeholder .nav-right .btn-logout-nav .logout-icon {
+        font-size: 1em;
+    }
+
+    /* Toast Mobile Kecil */
+    .toast {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        padding: 10px 14px;
+        font-size: 0.78em;
+        border-radius: var(--radius-sm);
+    }
+
+    .toast .toast-icon {
+        font-size: 1.2em;
+    }
+
+    /* Score Bar Mobile Kecil */
+    .score-bar-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .score-bar-item>div:first-child {
+        min-width: unset;
+    }
+
+    .score-bar-item>div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .score-bar-item .score-track {
+        width: 100%;
+    }
+
+    /* Modal Mobile Kecil */
+    .modal {
+        padding: 16px 12px;
+    }
+}
+
+/* ============================================================
+   29. SCROLLBAR (Style Scrollbar)
+   ============================================================ */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* ============================================================
+   30. PRINT STYLES (Style Cetak)
+   ============================================================ */
+@media print {
+    /* Sembunyikan elemen yang tidak perlu saat cetak */
+    .navbar-placeholder,
+    .dashboard-header .header-actions,
+    .btn,
+    .tab-navigation,
+    .table-header .table-search,
+    .table-footer .table-actions,
+    .exam-card .exam-footer,
+    .action-btns {
+        display: none !important;
+    }
+
+    .admin-dashboard {
+        margin-top: 20px !important;
+        padding: 10px !important;
+    }
+
+    .stat-card,
+    .exam-card,
+    .table-wrapper,
+    .score-chart,
+    .hasil-stat-card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+
+    body {
+        background: white !important;
+    }
+
+    .table-header {
+        background: #f5f5f5 !important;
+    }
+}
+/* ============================================================
+   TOGGLE SWITCH - AKTIFKAN/NONAKTIFKAN UJIAN
+   ============================================================ */
+
+/* Container Toggle */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: #f8fafc;
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--border-color, #eef2f7);
+}
+
+.toggle-container .toggle-label {
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--text-secondary, #6b7a8a);
+}
+
+/* Switch Toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #cbd5e1;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.switch .slider::before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    transition: 0.4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.switch input:checked + .slider {
+    background: var(--success, #059669);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(22px);
+}
+
+.switch input:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Status Toggle */
+.toggle-status {
+    font-size: 0.75em;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 20px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.toggle-status.active {
+    background: var(--success-bg, rgba(5, 150, 105, 0.08));
+    color: var(--success, #059669);
+}
+
+.toggle-status.inactive {
+    background: var(--danger-bg, rgba(220, 38, 38, 0.08));
+    color: var(--danger, #dc2626);
+}
+
+/* Exam Header dengan Toggle */
+.exam-card .exam-header .exam-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.exam-card .exam-header .exam-actions .exam-status-badge {
+    font-size: 0.65em;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.exam-status-badge.active {
+    background: var(--success-bg, rgba(5, 150, 105, 0.08));
+    color: var(--success, #059669);
+}
+
+.exam-status-badge.inactive {
+    background: var(--danger-bg, rgba(220, 38, 38, 0.08));
+    color: var(--danger, #dc2626);
+}
+
+/* Info Pesan Status Ujian */
+.exam-status-info {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm, 8px);
+    margin: 10px 0;
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.exam-status-info.active {
+    background: var(--success-bg, rgba(5, 150, 105, 0.08));
+    color: var(--success, #059669);
+    border: 1px solid rgba(5, 150, 105, 0.15);
+}
+
+.exam-status-info.inactive {
+    background: var(--danger-bg, rgba(220, 38, 38, 0.08));
+    color: var(--danger, #dc2626);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.exam-status-info .status-icon {
+    font-size: 1.2em;
+}
+
+/* ============================================================
+   RESPONSIVE TOGGLE
+   ============================================================ */
+@media (max-width: 768px) {
+    .toggle-container {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 6px 12px;
+    }
+
+    .exam-card .exam-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .exam-card .exam-header .exam-actions {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .switch {
+        width: 40px;
+        height: 22px;
+    }
+
+    .switch .slider::before {
+        height: 16px;
+        width: 16px;
+        left: 3px;
+        bottom: 3px;
+    }
+
+    .switch input:checked + .slider::before {
+        transform: translateX(18px);
+    }
+}
+
+@media (max-width: 480px) {
+    .toggle-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .exam-card .exam-header .exam-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .toggle-status {
+        align-self: center;
+    }
+}
+
+/* ============================================================
+   TOGGLE SWITCH - AKTIFKAN/NONAKTIFKAN UJIAN
+   ============================================================ */
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #eef2f7);
+}
+
+.toggle-container .toggle-label {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--text-secondary, #6b7a8a);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #cbd5e1;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.switch .slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    transition: 0.4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.switch input:checked + .slider {
+    background: var(--success, #059669);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+.toggle-status {
+    font-size: 0.7em;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 20px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.toggle-status.active {
+    background: var(--success-bg, rgba(5, 150, 105, 0.08));
+    color: var(--success, #059669);
+}
+
+.toggle-status.inactive {
+    background: var(--danger-bg, rgba(220, 38, 38, 0.08));
+    color: var(--danger, #dc2626);
+}
+
+.exam-status-info {
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.82em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.exam-status-info.active {
+    background: var(--success-bg, rgba(5, 150, 105, 0.08));
+    color: var(--success, #059669);
+    border: 1px solid rgba(5, 150, 105, 0.15);
+}
+
+.exam-status-info.inactive {
+    background: var(--danger-bg, rgba(220, 38, 38, 0.08));
+    color: var(--danger, #dc2626);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.exam-status-info .status-icon {
+    font-size: 1.1em;
+}
+
+.exam-card .exam-header .exam-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .toggle-container {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 6px 10px;
+    }
+
+    .exam-card .exam-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .exam-card .exam-header .exam-actions {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .switch {
+        width: 38px;
+        height: 20px;
+    }
+
+    .switch .slider::before {
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+    }
+
+    .switch input:checked + .slider::before {
+        transform: translateX(18px);
+    }
+}
+
+@media (max-width: 480px) {
+    .toggle-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .exam-card .exam-header .exam-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .toggle-status {
+        align-self: center;
+    }
+}
