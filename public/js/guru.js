@@ -1,6 +1,6 @@
 // ============================================================
 // GURU DASHBOARD JS - Ujian Online System
-// VERSI: 3.2.0 - FULL INTEGRASI DENGAN ADMIN
+// VERSI: 3.3.0 - STABIL, ANTI-REFRESH, AUTO-SYNC
 // ============================================================
 
 (function() {
@@ -15,8 +15,8 @@
         storageKey: 'ujianOnlineData',
         hasilKey: 'hasilUjianData',
         ujianStatusKey: 'ujianStatus',
-        pretestDuration: 1800,  // 30 menit
-        posttestDuration: 3600  // 60 menit
+        pretestDuration: 1800,   // 30 menit
+        posttestDuration: 3600   // 60 menit
     };
 
     // ============================================================
@@ -24,14 +24,13 @@
     // ============================================================
     let currentUser = null;
     let guruProfile = null;
-    let allPeserta = [];
     let allSoal = [];
     let currentTab = 'test';
     let currentUjianType = 'pretest';
     let soalFilter = 'all';
     let ujianStatus = { pretest: false, posttest: false };
-    let hasSubmitted = { pretest: false, posttest: false };
     
+    let hasSubmitted = { pretest: false, posttest: false };
     let ujianState = {
         pretest: {
             started: false,
@@ -75,17 +74,13 @@
     };
 
     // ============================================================
-    // STORAGE FUNCTIONS - HANYA BACA DARI ADMIN
+    // STORAGE & PERSISTENCE FUNCTIONS
     // ============================================================
 
     function getDataFromStorage() {
         try {
             const stored = localStorage.getItem(CONFIG.storageKey);
-            if (stored) {
-                return JSON.parse(stored);
-            }
-            console.warn('⚠️ Tidak ada data di localStorage dengan key:', CONFIG.storageKey);
-            return null;
+            return stored ? JSON.parse(stored) : null;
         } catch (e) {
             console.error('❌ Gagal mengambil data:', e);
             return null;
@@ -95,12 +90,7 @@
     function getGuruProfile(username) {
         const data = getDataFromStorage();
         if (data && data.userData) {
-            const user = data.userData.find(u =>
-                u.username === username &&
-                u.role === 'guru' &&
-                u.status === 'active'
-            );
-
+            const user = data.userData.find(u => u.username === username && u.role === 'guru' && u.status === 'active');
             if (user) {
                 return {
                     nama: user.fullname || 'Guru',
@@ -115,53 +105,63 @@
                 };
             }
         }
-
-        // Fallback jika data guru tidak ditemukan di storage
-        return {
-            nama: 'Guru',
-            nip: '-',
-            nuptk: '-',
-            tempat_lahir: '-',
-            tanggal_lahir: '-',
-            nama_sekolah: '-',
-            mapel: '-',
-            username: username || 'guru'
-        };
+        return { nama: 'Guru', nip: '-', nuptk: '-', tempat_lahir: '-', tanggal_lahir: '-', nama_sekolah: '-', mapel: '-', username: username || 'guru' };
     }
 
-    function getPesertaFromStorage() {
-        const data = getDataFromStorage();
-        if (data && data.pesertaData) {
-            return data.pesertaData;
-        }
-        return [];
-    }
-
-    // ✅ AMBIL SOAL HANYA DARI STORAGE - TIDAK ADA SAMPLE
     function getSoalFromStorage() {
         const data = getDataFromStorage();
-        if (data && data.soalData && data.soalData.length > 0) {
-            console.log(`📝 Mendapatkan ${data.soalData.length} soal dari storage Admin`);
-            return data.soalData;
-        }
-        console.warn('⚠️ Tidak ada soal di storage. Admin harus upload soal terlebih dahulu.');
-        return []; // KEMBALIKAN KOSONG, BUKAN SAMPLE
+        return (data && data.soalData) ? data.soalData : [];
     }
 
     function getSoalByJenis(jenis) {
         const semuaSoal = getSoalFromStorage();
-        
-        if (semuaSoal.length === 0) {
-            console.warn('⚠️ Tidak ada soal! Admin harus upload soal terlebih dahulu.');
-            return [];
+        return jenis === 'all' ? semuaSoal : semuaSoal.filter(s => s.jenis === jenis);
+    }
+
+    // --- BARU: Simpan & Muat State Ujian (Anti-Refresh) ---
+    function saveExamStateToSession() {
+        if (!currentUser) return;
+        const stateToSave = {
+            ujianState: {
+                pretest: { ...ujianState.pretest, timer: null }, // Jangan simpan objek interval
+                posttest: { ...ujianState.posttest, timer: null }
+            },
+            hasSubmitted: hasSubmitted
+        };
+        sessionStorage.setItem(`examState_${currentUser.username}`, JSON.stringify(stateToSave));
+    }
+
+    function loadExamStateFromSession() {
+        if (!currentUser) return;
+        const saved = sessionStorage.getItem(`examState_${currentUser.username}`);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                ujianState = parsed.ujianState;
+                hasSubmitted = parsed.hasSubmitted;
+                
+                // Restart timer jika ujian sedang berlangsung saat refresh
+                if (ujianState.pretest.started && !ujianState.pretest.finished && !hasSubmitted.pretest) {
+                    startTimer('pretest');
+                }
+                if (ujianState.posttest.started && !ujianState.posttest.finished && !hasSubmitted.posttest) {
+                    startTimer('posttest');
+                }
+                console.log('✅ State ujian dipulihkan dari session (Anti-Refresh)');
+            } catch (e) {
+                console.error('❌ Gagal memulihkan state ujian:', e);
+            }
         }
-        
-        if (jenis === 'all') return semuaSoal;
-        return semuaSoal.filter(s => s.jenis === jenis);
+    }
+
+    function clearExamStateFromSession() {
+        if (currentUser) {
+            sessionStorage.removeItem(`examState_${currentUser.username}`);
+        }
     }
 
     // ============================================================
-    // UJIAN STATUS FUNCTIONS (Dari Admin)
+    // UJIAN STATUS
     // ============================================================
 
     function loadUjianStatus() {
@@ -171,14 +171,11 @@
                 ujianStatus = JSON.parse(stored);
             } else {
                 ujianStatus = { pretest: false, posttest: false };
-                localStorage.setItem(CONFIG.ujianStatusKey, JSON.stringify(ujianStatus));
             }
-            console.log('📋 Status ujian dimuat:', ujianStatus);
             return ujianStatus;
         } catch (e) {
             console.error('❌ Gagal load status ujian:', e);
-            ujianStatus = { pretest: false, posttest: false };
-            return ujianStatus;
+            return { pretest: false, posttest: false };
         }
     }
 
@@ -187,7 +184,7 @@
     }
 
     // ============================================================
-    // SESSION MANAGEMENT
+    // SESSION
     // ============================================================
 
     function getSession() {
@@ -203,16 +200,10 @@
 
     function checkGuruSession() {
         const session = getSession();
-        if (!session) {
+        if (!session || session.user.role !== 'guru') {
             window.location.href = CONFIG.loginUrl;
             return false;
         }
-
-        if (session.user.role !== 'guru') {
-            window.location.href = CONFIG.loginUrl;
-            return false;
-        }
-
         currentUser = session.user;
         return true;
     }
@@ -223,20 +214,15 @@
 
     function switchTab(tab) {
         currentTab = tab;
-
         document.querySelectorAll('.tab-btn-guru').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tab);
         });
-
         document.querySelectorAll('.tab-panel-guru').forEach(panel => {
             panel.classList.toggle('active', panel.id === `tab-${tab}`);
         });
-
         if (tab === 'ujian') {
             renderUjian();
         }
-
-        console.log(`📌 Tab berubah ke: ${tab}`);
     }
 
     // ============================================================
@@ -250,7 +236,6 @@
 
     function renderProfile() {
         guruProfile = getGuruProfile(currentUser.username);
-
         if (elements.guruName) elements.guruName.textContent = guruProfile.nama;
         if (elements.guruNip) elements.guruNip.textContent = guruProfile.nip;
         if (elements.guruNuptk) elements.guruNuptk.textContent = guruProfile.nuptk;
@@ -258,19 +243,12 @@
         let ttlDisplay = '-';
         if (guruProfile.tempat_lahir || guruProfile.tanggal_lahir) {
             let ttlParts = [];
-            if (guruProfile.tempat_lahir && guruProfile.tempat_lahir !== '-') {
-                ttlParts.push(guruProfile.tempat_lahir);
-            }
+            if (guruProfile.tempat_lahir && guruProfile.tempat_lahir !== '-') ttlParts.push(guruProfile.tempat_lahir);
             if (guruProfile.tanggal_lahir && guruProfile.tanggal_lahir !== '-') {
                 try {
                     const date = new Date(guruProfile.tanggal_lahir);
                     if (!isNaN(date.getTime())) {
-                        const formattedDate = date.toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                        });
-                        ttlParts.push(formattedDate);
+                        ttlParts.push(date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }));
                     } else {
                         ttlParts.push(guruProfile.tanggal_lahir);
                     }
@@ -278,15 +256,9 @@
                     ttlParts.push(guruProfile.tanggal_lahir);
                 }
             }
-            if (ttlParts.length > 0) {
-                ttlDisplay = ttlParts.join(', ');
-            }
+            if (ttlParts.length > 0) ttlDisplay = ttlParts.join(', ');
         }
-
-        if (elements.guruTempatLahir) {
-            elements.guruTempatLahir.innerHTML = `<span class="ttl-date">${ttlDisplay}</span>`;
-        }
-
+        if (elements.guruTempatLahir) elements.guruTempatLahir.innerHTML = `<span class="ttl-date">${ttlDisplay}</span>`;
         if (elements.guruSekolah) elements.guruSekolah.textContent = guruProfile.nama_sekolah;
         if (elements.guruMapel) elements.guruMapel.textContent = '📖 ' + guruProfile.mapel;
 
@@ -294,44 +266,33 @@
         if (elements.guruAvatar) elements.guruAvatar.textContent = initial;
         if (elements.guruAvatarNav) elements.guruAvatarNav.textContent = initial;
         if (elements.guruNameNav) elements.guruNameNav.textContent = guruProfile.nama;
-
-        console.log('✅ Profile guru berhasil dimuat:', guruProfile.nama);
     }
 
     function renderSoal(filter = 'all') {
         soalFilter = filter;
-        allSoal = getSoalFromStorage(); // ✅ HANYA DARI STORAGE
+        allSoal = getSoalFromStorage();
 
         const pretestSoal = allSoal.filter(s => s.jenis === 'pretest');
         const posttestSoal = allSoal.filter(s => s.jenis === 'posttest');
 
-        // Update badge status
         updateBadge('pretest', pretestSoal);
         updateBadge('posttest', posttestSoal);
 
-        // Update counts
         if (elements.pretestCount) elements.pretestCount.textContent = pretestSoal.length;
         if (elements.posttestCount) elements.posttestCount.textContent = posttestSoal.length;
-
-        // Update status aktif
-        const pretestAktif = pretestSoal.length;
-        const posttestAktif = posttestSoal.length;
-        if (elements.pretestAktif) elements.pretestAktif.textContent = `Aktif: ${pretestAktif}`;
-        if (elements.posttestAktif) elements.posttestAktif.textContent = `Aktif: ${posttestAktif}`;
+        if (elements.pretestAktif) elements.pretestAktif.textContent = `Aktif: ${pretestSoal.length}`;
+        if (elements.posttestAktif) elements.posttestAktif.textContent = `Aktif: ${posttestSoal.length}`;
 
         renderSoalList(filter);
 
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.filter === filter);
         });
-
-        console.log(`📝 Soal berhasil dimuat - Total: ${allSoal.length} soal (dari Admin)`);
     }
 
     function updateBadge(type, soalList) {
         const badge = type === 'pretest' ? elements.pretestBadge : elements.posttestBadge;
         if (!badge) return;
-
         if (soalList.length === 0) {
             badge.textContent = '❌ Kosong';
             badge.style.background = '#fee2e2';
@@ -353,71 +314,48 @@
         const posttestFiltered = filteredSoal.filter(s => s.jenis === 'posttest');
 
         if (elements.pretestSoalList) {
-            if (pretestFiltered.length === 0) {
-                elements.pretestSoalList.innerHTML = `
+            elements.pretestSoalList.innerHTML = pretestFiltered.length === 0 
+                ? `<div class="soal-item"><div class="soal-info"><div class="soal-question" style="color:#8a9aa8;">Belum ada soal pretest dari Admin</div></div></div>`
+                : pretestFiltered.map(s => `
                     <div class="soal-item">
                         <div class="soal-info">
-                            <div class="soal-question" style="color:#8a9aa8;">Belum ada soal pretest dari Admin</div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                elements.pretestSoalList.innerHTML = pretestFiltered.map(s => {
-                    const status = s.status || 'aktif';
-                    return `
-                        <div class="soal-item">
-                            <div class="soal-info">
-                                <div class="soal-question">${s.pertanyaan}</div>
-                                <div class="soal-meta">
-                                    <span class="soal-type pretest">PRETEST</span>
-                                    <span>ID: SOAL-${String(s.id).padStart(3, '0')}</span>
-                                </div>
+                            <div class="soal-question">${s.pertanyaan || 'Soal tanpa teks'}</div>
+                            <div class="soal-meta">
+                                <span class="soal-type pretest">PRETEST</span>
+                                <span>ID: SOAL-${String(s.id).padStart(3, '0')}</span>
                             </div>
-                            <span class="soal-status ${status}">${status.toUpperCase()}</span>
                         </div>
-                    `;
-                }).join('');
-            }
+                        <span class="soal-status ${s.status || 'aktif'}">${(s.status || 'aktif').toUpperCase()}</span>
+                    </div>
+                `).join('');
         }
 
         if (elements.posttestSoalList) {
-            if (posttestFiltered.length === 0) {
-                elements.posttestSoalList.innerHTML = `
+            elements.posttestSoalList.innerHTML = posttestFiltered.length === 0 
+                ? `<div class="soal-item"><div class="soal-info"><div class="soal-question" style="color:#8a9aa8;">Belum ada soal posttest dari Admin</div></div></div>`
+                : posttestFiltered.map(s => `
                     <div class="soal-item">
                         <div class="soal-info">
-                            <div class="soal-question" style="color:#8a9aa8;">Belum ada soal posttest dari Admin</div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                elements.posttestSoalList.innerHTML = posttestFiltered.map(s => {
-                    const status = s.status || 'aktif';
-                    return `
-                        <div class="soal-item">
-                            <div class="soal-info">
-                                <div class="soal-question">${s.pertanyaan}</div>
-                                <div class="soal-meta">
-                                    <span class="soal-type posttest">POSTTEST</span>
-                                    <span>ID: SOAL-${String(s.id).padStart(3, '0')}</span>
-                                </div>
+                            <div class="soal-question">${s.pertanyaan || 'Soal tanpa teks'}</div>
+                            <div class="soal-meta">
+                                <span class="soal-type posttest">POSTTEST</span>
+                                <span>ID: SOAL-${String(s.id).padStart(3, '0')}</span>
                             </div>
-                            <span class="soal-status ${status}">${status.toUpperCase()}</span>
                         </div>
-                    `;
-                }).join('');
-            }
+                        <span class="soal-status ${s.status || 'aktif'}">${(s.status || 'aktif').toUpperCase()}</span>
+                    </div>
+                `).join('');
         }
     }
 
     // ============================================================
-    // RENDER UJIAN (Dengan Status Aktif/Nonaktif dari Admin)
+    // RENDER UJIAN
     // ============================================================
 
     function renderUjian() {
         const container = elements.ujianContainer;
         if (!container) return;
 
-        // Load status ujian terbaru dari Admin
         loadUjianStatus();
 
         const pretestSoal = getSoalByJenis('pretest');
@@ -425,26 +363,14 @@
         const totalPretest = pretestSoal.length;
         const totalPosttest = posttestSoal.length;
 
-        const isPretestActive = totalPretest > 0;
-        const isPosttestActive = totalPosttest > 0;
-
-        // Cek status dari Admin
         const pretestEnabled = isUjianAktif('pretest');
         const posttestEnabled = isUjianAktif('posttest');
-
-        // Cek apakah sudah submit
         const pretestSubmitted = hasSubmitted.pretest;
         const posttestSubmitted = hasSubmitted.posttest;
 
-        if (!isPretestActive && !isPosttestActive) {
+        if (totalPretest === 0 && totalPosttest === 0) {
             container.innerHTML = `
-                <div class="ujian-header">
-                    <h3>📝 Ujian</h3>
-                    <div class="ujian-timer">
-                        <span class="timer-icon">⏱️</span>
-                        <span class="timer-time" id="timerDisplay">00:00:00</span>
-                    </div>
-                </div>
+                <div class="ujian-header"><h3>📝 Ujian</h3></div>
                 <div class="ujian-body">
                     <div class="no-data">
                         <div class="no-data-icon">📝</div>
@@ -463,81 +389,47 @@
         const isFinished = currentState.finished;
         const isSubmitted = currentUjianType === 'pretest' ? pretestSubmitted : posttestSubmitted;
         const isEnabled = currentUjianType === 'pretest' ? pretestEnabled : posttestEnabled;
-        const durasi = currentUjianType === 'pretest' ? CONFIG.pretestDuration : CONFIG.posttestDuration;
         const waktuLabel = currentUjianType === 'pretest' ? '30 Menit' : '60 Menit';
 
-        // Status info
         let statusInfoHtml = '';
         if (isSubmitted) {
-            statusInfoHtml = `
-                <div class="ujian-status-info completed">
-                    <span class="status-icon">✅</span>
-                    <span>Ujian <strong>${currentUjianType === 'pretest' ? 'Pretest' : 'Posttest'}</strong> telah <strong>SELESAI</strong>. Anda sudah mengikuti ujian ini.</span>
-                </div>
-            `;
+            statusInfoHtml = `<div class="ujian-status-info completed"><span class="status-icon">✅</span><span>Ujian <strong>${currentUjianType === 'pretest' ? 'Pretest' : 'Posttest'}</strong> telah <strong>SELESAI</strong>.</span></div>`;
         } else if (!isEnabled && totalSoal > 0) {
-            statusInfoHtml = `
-                <div class="ujian-status-info inactive">
-                    <span class="status-icon">🔴</span>
-                    <span>Ujian <strong>${currentUjianType === 'pretest' ? 'Pretest' : 'Posttest'}</strong> sedang <strong>NONAKTIF</strong> oleh Admin. Tunggu hingga diaktifkan.</span>
-                </div>
-            `;
+            statusInfoHtml = `<div class="ujian-status-info inactive"><span class="status-icon">🔴</span><span>Ujian <strong>${currentUjianType === 'pretest' ? 'Pretest' : 'Posttest'}</strong> sedang <strong>NONAKTIF</strong> oleh Admin.</span></div>`;
         } else if (isEnabled && totalSoal > 0 && !isSubmitted) {
-            statusInfoHtml = `
-                <div class="ujian-status-info active">
-                    <span class="status-icon">🟢</span>
-                    <span>Ujian <strong>${currentUjianType === 'pretest' ? 'Pretest' : 'Posttest'}</strong> sedang <strong>AKTIF</strong>. Silakan mulai ujian.</span>
-                </div>
-            `;
+            statusInfoHtml = `<div class="ujian-status-info active"><span class="status-icon">🟢</span><span>Ujian <strong>${currentUjianType === 'pretest' ? 'Pretest' : 'Posttest'}</strong> sedang <strong>AKTIF</strong>. Silakan mulai.</span></div>`;
         }
 
         let soalHtml = '';
         if (totalSoal === 0) {
-            soalHtml = `
-                <div class="no-data">
-                    <div class="no-data-icon">📝</div>
-                    <div class="no-data-title">Belum ada soal ${currentUjianType === 'pretest' ? 'Pretest' : 'Posttest'} dari Admin</div>
-                    <div class="no-data-desc">Admin harus menambahkan soal terlebih dahulu</div>
-                </div>
-            `;
+            soalHtml = `<div class="no-data"><div class="no-data-icon">📝</div><div class="no-data-title">Belum ada soal ${currentUjianType} dari Admin</div></div>`;
         } else {
             const isDisabled = isSubmitted || isFinished || !isEnabled || !isStarted;
             soalHtml = currentSoal.map((soal, index) => {
                 const selected = currentState.jawaban[soal.id] || '';
                 return `
                 <div class="ujian-soal-item" id="soal-${soal.id}">
-                    <div class="soal-text">
-                        <span class="soal-number">${index + 1}.</span>
-                        ${soal.pertanyaan}
-                    </div>
+                    <div class="soal-text"><span class="soal-number">${index + 1}.</span> ${soal.pertanyaan || 'Soal tanpa teks'}</div>
                     <div class="soal-options">
                         <label class="option-item ${selected === 'A' ? 'selected' : ''}">
                             <input type="radio" name="soal_${soal.id}" value="A" onchange="pilihJawaban('${currentUjianType}', ${soal.id}, 'A')" ${isDisabled ? 'disabled' : ''} ${selected === 'A' ? 'checked' : ''}>
-                            <span class="option-label">A.</span>
-                            <span class="option-text">${soal.a}</span>
+                            <span class="option-label">A.</span><span class="option-text">${soal.a || '-'}</span>
                         </label>
                         <label class="option-item ${selected === 'B' ? 'selected' : ''}">
                             <input type="radio" name="soal_${soal.id}" value="B" onchange="pilihJawaban('${currentUjianType}', ${soal.id}, 'B')" ${isDisabled ? 'disabled' : ''} ${selected === 'B' ? 'checked' : ''}>
-                            <span class="option-label">B.</span>
-                            <span class="option-text">${soal.b}</span>
+                            <span class="option-label">B.</span><span class="option-text">${soal.b || '-'}</span>
                         </label>
-                        ${soal.c && soal.c !== '-' ? `
-                        <label class="option-item ${selected === 'C' ? 'selected' : ''}">
+                        ${soal.c && soal.c !== '-' ? `<label class="option-item ${selected === 'C' ? 'selected' : ''}">
                             <input type="radio" name="soal_${soal.id}" value="C" onchange="pilihJawaban('${currentUjianType}', ${soal.id}, 'C')" ${isDisabled ? 'disabled' : ''} ${selected === 'C' ? 'checked' : ''}>
-                            <span class="option-label">C.</span>
-                            <span class="option-text">${soal.c}</span>
-                        </label>
-                        ` : ''}
-                        ${soal.d && soal.d !== '-' ? `
-                        <label class="option-item ${selected === 'D' ? 'selected' : ''}">
+                            <span class="option-label">C.</span><span class="option-text">${soal.c}</span>
+                        </label>` : ''}
+                        ${soal.d && soal.d !== '-' ? `<label class="option-item ${selected === 'D' ? 'selected' : ''}">
                             <input type="radio" name="soal_${soal.id}" value="D" onchange="pilihJawaban('${currentUjianType}', ${soal.id}, 'D')" ${isDisabled ? 'disabled' : ''} ${selected === 'D' ? 'checked' : ''}>
-                            <span class="option-label">D.</span>
-                            <span class="option-text">${soal.d}</span>
-                        </label>
-                        ` : ''}
+                            <span class="option-label">D.</span><span class="option-text">${soal.d}</span>
+                        </label>` : ''}
                     </div>
-                </div>
-            `}).join('');
+                </div>`;
+            }).join('');
         }
 
         const terjawab = Object.keys(currentState.jawaban).length;
@@ -545,22 +437,14 @@
 
         let actionButtons = '';
         if (isSubmitted) {
-            actionButtons = `
-                <span style="color:#059669;font-weight:600;font-size:0.9em;">✅ Ujian Selesai</span>
-                <button class="btn btn-outline btn-sm" onclick="resetUjian('${currentUjianType}')">🔄 Reset</button>
-            `;
+            actionButtons = `<span style="color:#059669;font-weight:600;font-size:0.9em;">✅ Ujian Selesai</span>
+                             <button class="btn btn-outline btn-sm" onclick="resetUjian('${currentUjianType}')">🔄 Reset</button>`;
         } else if (!isStarted && !isFinished && totalSoal > 0 && isEnabled) {
-            actionButtons = `
-                <button class="btn btn-primary btn-sm" onclick="startUjian('${currentUjianType}')" id="startUjianBtn">▶️ Mulai Ujian</button>
-            `;
+            actionButtons = `<button class="btn btn-primary btn-sm" onclick="startUjian('${currentUjianType}')" id="startUjianBtn">▶️ Mulai Ujian</button>`;
         } else if (isStarted && !isFinished && totalSoal > 0 && isEnabled) {
-            actionButtons = `
-                <button class="btn btn-success btn-sm" onclick="submitUjian('${currentUjianType}')" id="submitUjianBtn">📤 Selesai & Kirim</button>
-            `;
+            actionButtons = `<button class="btn btn-success btn-sm" onclick="submitUjian('${currentUjianType}')" id="submitUjianBtn">📤 Selesai & Kirim</button>`;
         } else if (!isEnabled && totalSoal > 0 && !isSubmitted) {
-            actionButtons = `
-                <span style="color:#dc2626;font-weight:600;font-size:0.9em;">🔴 Nonaktif</span>
-            `;
+            actionButtons = `<span style="color:#dc2626;font-weight:600;font-size:0.9em;">🔴 Nonaktif</span>`;
         }
 
         container.innerHTML = `
@@ -576,35 +460,27 @@
             <div class="ujian-body">
                 <div class="ujian-selector">
                     <button class="ujian-type-btn ${currentUjianType === 'pretest' ? 'active' : ''}" onclick="switchUjianType('pretest')">
-                        📋 Pretest
-                        <span class="type-badge pretest">${totalPretest} Soal</span>
-                        <span class="type-status ${isPretestActive ? (pretestEnabled ? 'active' : 'inactive') : 'inactive'}">${isPretestActive ? (pretestEnabled ? '✅ Aktif' : '🔴 Nonaktif') : '❌ Kosong'}</span>
+                        📋 Pretest <span class="type-badge pretest">${totalPretest} Soal</span>
+                        <span class="type-status ${pretestEnabled ? 'active' : 'inactive'}">${pretestEnabled ? '✅ Aktif' : '🔴 Nonaktif'}</span>
                         ${pretestSubmitted ? '<span class="type-status completed">✅ Selesai</span>' : ''}
                     </button>
                     <button class="ujian-type-btn ${currentUjianType === 'posttest' ? 'active' : ''}" onclick="switchUjianType('posttest')">
-                        📝 Posttest
-                        <span class="type-badge posttest">${totalPosttest} Soal</span>
-                        <span class="type-status ${isPosttestActive ? (posttestEnabled ? 'active' : 'inactive') : 'inactive'}">${isPosttestActive ? (posttestEnabled ? '✅ Aktif' : '🔴 Nonaktif') : '❌ Kosong'}</span>
+                        📝 Posttest <span class="type-badge posttest">${totalPosttest} Soal</span>
+                        <span class="type-status ${posttestEnabled ? 'active' : 'inactive'}">${posttestEnabled ? '✅ Aktif' : '🔴 Nonaktif'}</span>
                         ${posttestSubmitted ? '<span class="type-status completed">✅ Selesai</span>' : ''}
                     </button>
                 </div>
-
                 ${statusInfoHtml}
-
                 ${soalHtml}
             </div>
             <div class="ujian-footer">
                 <div class="ujian-progress">
                     <span id="jawabanCount">${terjawab}/${totalSoal} terjawab</span>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill" style="width:${Math.min(progress, 100)}%"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:${Math.min(progress, 100)}%"></div></div>
                     <span id="progressText">${Math.round(progress)}%</span>
                 </div>
                 <div class="ujian-actions">
-                    ${isFinished && !isSubmitted ? `
-                    <button class="btn btn-outline btn-sm" onclick="resetUjian('${currentUjianType}')">🔄 Ulangi</button>
-                    ` : ''}
+                    ${isFinished && !isSubmitted ? `<button class="btn btn-outline btn-sm" onclick="resetUjian('${currentUjianType}')">🔄 Ulangi</button>` : ''}
                 </div>
             </div>
         `;
@@ -612,23 +488,17 @@
         if (isStarted && !isFinished && !isSubmitted) {
             startTimer(currentUjianType);
         }
-
-        // Update status info di modal juga
         updateStatusInfoModal();
-
-        console.log(`📝 Ujian ${currentUjianType} dimuat - ${totalSoal} soal (Aktif: ${isEnabled})`);
     }
 
     function updateStatusInfoModal() {
         const pretestStatus = document.getElementById('pretestStatusInfoModal');
         const posttestStatus = document.getElementById('posttestStatusInfoModal');
-        
         if (pretestStatus) {
             const isActive = isUjianAktif('pretest');
             pretestStatus.textContent = isActive ? '✅ AKTIF' : '🔴 NONAKTIF';
             pretestStatus.style.color = isActive ? '#059669' : '#dc2626';
         }
-        
         if (posttestStatus) {
             const isActive = isUjianAktif('posttest');
             posttestStatus.textContent = isActive ? '✅ AKTIF' : '🔴 NONAKTIF';
@@ -650,10 +520,8 @@
                 ujianState[currentUjianType].timer = null;
             }
         }
-
         currentUjianType = type;
         renderUjian();
-        console.log(`📌 Beralih ke ujian: ${type}`);
     }
 
     // ============================================================
@@ -662,10 +530,10 @@
 
     function pilihJawaban(type, soalId, jawaban) {
         const state = ujianState[type];
-        if (state.finished || !state.started) return;
-        if (hasSubmitted[type]) return;
+        if (state.finished || !state.started || hasSubmitted[type]) return;
 
         state.jawaban[soalId] = jawaban;
+        saveExamStateToSession(); // Simpan progres
         updateProgress(type);
 
         const soalItem = document.getElementById(`soal-${soalId}`);
@@ -680,8 +548,6 @@
                 }
             });
         }
-
-        console.log(`📝 Jawaban soal ${soalId} (${type}): ${jawaban}`);
     }
 
     function updateProgress(type) {
@@ -700,25 +566,12 @@
         if (jawabanCount) jawabanCount.textContent = `${terjawab}/${totalSoal} terjawab`;
     }
 
-    // ============================================================
-    // START UJIAN - DENGAN CEK STATUS
-    // ============================================================
-
     function startUjian(type) {
-        if (ujianState[type].started) return;
-        if (hasSubmitted[type]) {
-            showToast('warning', '⚠️ Anda sudah mengikuti ujian ini!');
-            return;
-        }
+        if (ujianState[type].started || hasSubmitted[type]) return;
 
-        // CEK APAKAH UJIAN AKTIF DARI ADMIN
         loadUjianStatus();
-        const isActive = isUjianAktif(type);
-        
-        if (!isActive) {
-            const label = type === 'pretest' ? 'Pretest' : 'Posttest';
-            showToast('error', `⚠️ Ujian ${label} sedang NONAKTIF!`);
-            alert(`⚠️ Ujian ${label} saat ini sedang NONAKTIF.\n\nSilakan tunggu admin mengaktifkan ujian terlebih dahulu.`);
+        if (!isUjianAktif(type)) {
+            showToast('error', `⚠️ Ujian ${type === 'pretest' ? 'Pretest' : 'Posttest'} sedang NONAKTIF!`);
             return;
         }
 
@@ -736,39 +589,35 @@
             ujianState[type].finished = false;
             ujianState[type].jawaban = {};
             ujianState[type].timeLeft = type === 'pretest' ? CONFIG.pretestDuration : CONFIG.posttestDuration;
-
+            
+            saveExamStateToSession();
             renderUjian();
             startTimer(type);
             showToast('success', `⏱️ Ujian ${label} dimulai! Selamat mengerjakan.`);
-            console.log(`⏱️ Ujian ${label} dimulai`);
         }
     }
 
     function startTimer(type) {
         const state = ujianState[type];
-        if (state.timer) {
-            clearInterval(state.timer);
-        }
+        if (state.timer) clearInterval(state.timer);
 
         state.timer = setInterval(() => {
             state.timeLeft--;
-
+            saveExamStateToSession(); // Update waktu tersisa di session
+            
             const timerDisplay = document.getElementById('timerDisplay');
             if (timerDisplay) {
                 timerDisplay.textContent = formatTime(state.timeLeft);
-
-                if (state.timeLeft < 300) {
-                    timerDisplay.classList.add('warning');
-                } else {
-                    timerDisplay.classList.remove('warning');
+                if (state.timeLeft < 300) { // Kurang dari 5 menit
+                    timerDisplay.style.color = '#dc2626';
+                    timerDisplay.style.fontWeight = 'bold';
                 }
             }
-
+            
             if (state.timeLeft <= 0) {
                 clearInterval(state.timer);
                 state.timer = null;
-                const label = type === 'pretest' ? 'Pretest' : 'Posttest';
-                alert(`⏰ Waktu ujian ${label} telah habis!`);
+                showToast('error', '⏰ Waktu ujian telah habis! Jawaban otomatis dikirim.');
                 executeSubmitUjian(type);
             }
         }, 1000);
@@ -781,27 +630,9 @@
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    // ============================================================
-    // SUBMIT UJIAN
-    // ============================================================
-
     function submitUjian(type) {
         const state = ujianState[type];
-        
-        if (state.finished) {
-            showToast('warning', '⚠️ Ujian ini sudah selesai!');
-            return;
-        }
-
-        if (!state.started) {
-            showToast('error', '⚠️ Ujian belum dimulai!');
-            return;
-        }
-
-        if (hasSubmitted[type]) {
-            showToast('warning', '⚠️ Anda sudah mengikuti ujian ini!');
-            return;
-        }
+        if (state.finished || !state.started || hasSubmitted[type]) return;
 
         const soal = getSoalByJenis(type);
         const totalSoal = soal.length;
@@ -809,14 +640,8 @@
         const label = type === 'pretest' ? 'Pretest' : 'Posttest';
 
         if (confirm(`⚠️ Apakah Anda yakin ingin menyelesaikan ujian ${label}?\n\n` +
-            `📊 Statistik:\n` +
-            `   Total Soal: ${totalSoal}\n` +
-            `   Terjawab: ${terjawab}\n` +
-            `   Belum Terjawab: ${totalSoal - terjawab}\n` +
-            `   Waktu Tersisa: ${formatTime(state.timeLeft)}\n\n` +
-            `${totalSoal - terjawab > 0 ? '⚠️ Ada soal yang belum dijawab!' : '✅ Semua soal sudah terjawab!'}\n\n` +
-            `Tindakan ini tidak dapat dibatalkan!`)) {
-
+            `📊 Statistik:\nTotal Soal: ${totalSoal}\nTerjawab: ${terjawab}\nBelum Terjawab: ${totalSoal - terjawab}\nWaktu Tersisa: ${formatTime(state.timeLeft)}\n\n` +
+            `${totalSoal - terjawab > 0 ? '⚠️ Ada soal yang belum dijawab!' : '✅ Semua soal sudah terjawab!'}\n\nTindakan ini tidak dapat dibatalkan!`)) {
             executeSubmitUjian(type);
         }
     }
@@ -835,13 +660,12 @@
         const totalSoal = soal.length;
         const benar = hitungBenar(type);
         const label = type === 'pretest' ? 'Pretest' : 'Posttest';
-        const nilai = Math.round((benar / totalSoal) * 100);
+        const nilai = totalSoal > 0 ? Math.round((benar / totalSoal) * 100) : 0;
         const status = nilai >= 70 ? 'LULUS' : 'TIDAK LULUS';
 
         const totalDurasi = type === 'pretest' ? CONFIG.pretestDuration : CONFIG.posttestDuration;
         const waktuPengerjaan = totalDurasi - state.timeLeft;
 
-        // Simpan hasil
         saveHasilUjian({
             type: type,
             label: label,
@@ -858,6 +682,9 @@
             sekolah: guruProfile.nama_sekolah
         });
 
+        // Hapus state ujian dari session karena sudah selesai
+        clearExamStateFromSession();
+
         showResultModal(
             `📊 Hasil Ujian ${label}`,
             `
@@ -873,37 +700,28 @@
                     <div><div style="font-size:0.65em;color:#8a9aa8;">Nilai</div><div style="font-size:1.8em;font-weight:700;color:${nilai >= 70 ? '#059669' : '#dc2626'};">${nilai}</div></div>
                     <div><div style="font-size:0.65em;color:#8a9aa8;">Status</div><div style="background:${nilai >= 70 ? '#d1fae5' : '#fee2e2'};padding:6px;border-radius:6px;margin-top:2px;"><span style="font-weight:700;color:${nilai >= 70 ? '#059669' : '#dc2626'};">${status}</span></div></div>
                 </div>
-                <div style="font-size:0.8em;color:var(--text-muted);margin-top:8px;padding:8px;background:#fef3c7;border-radius:6px;border:1px solid #fcd34d;">
-                    ⚠️ Ujian ini hanya dapat diikuti <strong>1 kali</strong>. Hasil tidak dapat diubah.
-                </div>
             </div>
             `,
             function() {
                 renderUjian();
-                showToast('info', `📋 Ujian ${label} telah selesai`);
+                showToast('info', `📋 Ujian ${label} telah selesai dan disimpan.`);
             }
         );
-
-        console.log(`📊 Hasil Ujian ${label}: ${benar}/${totalSoal} benar (${nilai}%) - ${status}`);
     }
 
     function hitungBenar(type) {
         const soal = getSoalByJenis(type);
         const jawaban = ujianState[type].jawaban;
         let benar = 0;
-
-        soal.forEach(soal => {
-            if (jawaban[soal.id] === soal.jawaban) {
-                benar++;
-            }
+        soal.forEach(s => {
+            if (jawaban[s.id] === s.jawaban) benar++;
         });
-
         return benar;
     }
 
     function resetUjian(type) {
         const label = type === 'pretest' ? 'Pretest' : 'Posttest';
-        if (confirm(`Reset ujian ${label}? Semua jawaban akan dihapus dan Anda dapat mengikuti ulang.`)) {
+        if (confirm(`⚠️ Reset ujian ${label}? Semua jawaban dan progres akan dihapus. Lanjutkan?`)) {
             const state = ujianState[type];
             state.started = false;
             state.finished = false;
@@ -914,32 +732,32 @@
                 clearInterval(state.timer);
                 state.timer = null;
             }
+            clearExamStateFromSession();
             renderUjian();
-            showToast('info', `🔄 Ujian ${label} telah direset`);
+            showToast('info', `🔄 Ujian ${label} telah direset.`);
         }
     }
 
     // ============================================================
-    // SAVE HASIL UJIAN
+    // SAVE HASIL UJIAN (DIPERBAIKI: CEK HARI, BUKAN DETIK)
     // ============================================================
 
     function saveHasilUjian(data) {
         try {
             let hasilUjian = [];
             const stored = localStorage.getItem(CONFIG.hasilKey);
-            if (stored) {
-                hasilUjian = JSON.parse(stored);
-            }
+            if (stored) hasilUjian = JSON.parse(stored);
 
-            // Cek duplikat (hindari double submit)
+            // PERBAIKAN: Cek duplikasi berdasarkan Tanggal (YYYY-MM-DD), bukan timestamp penuh
+            const today = new Date().toISOString().split('T')[0];
             const exists = hasilUjian.some(h => 
                 h.guru === data.guru && 
                 h.type === data.type && 
-                h.tanggal === data.tanggal
+                h.tanggal.startsWith(today)
             );
 
             if (exists) {
-                console.log('⚠️ Hasil ujian sudah tersimpan, skip duplikasi');
+                console.warn('⚠️ Hasil ujian untuk hari ini sudah tersimpan, skip duplikasi.');
                 return true;
             }
 
@@ -970,12 +788,11 @@
     }
 
     // ============================================================
-    // MODAL HASIL
+    // MODAL & TOAST
     // ============================================================
 
     function showResultModal(title, message, onOk) {
         let modal = document.getElementById('modalResult');
-        
         if (!modal) {
             modal = document.createElement('div');
             modal.id = 'modalResult';
@@ -1003,9 +820,7 @@
 
         newOkBtn.addEventListener('click', function() {
             closeResultModal();
-            if (typeof onOk === 'function') {
-                onOk();
-            }
+            if (typeof onOk === 'function') onOk();
         });
 
         modal.classList.add('show');
@@ -1013,44 +828,29 @@
 
     function closeResultModal() {
         const modal = document.getElementById('modalResult');
-        if (modal) {
-            modal.classList.remove('show');
-        }
+        if (modal) modal.classList.remove('show');
     }
-
-    // ============================================================
-    // TOAST NOTIFICATION
-    // ============================================================
 
     function showToast(type, message) {
         const toast = document.getElementById('toast');
         if (!toast) return;
         toast.className = `toast ${type}`;
         const msgElement = toast.querySelector('.toast-message');
-        if (msgElement) {
-            msgElement.textContent = message;
-        } else {
-            toast.textContent = message;
-        }
+        if (msgElement) msgElement.textContent = message;
+        else toast.textContent = message;
+        
         toast.classList.add('show');
-
         clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     // ============================================================
-    // FILTER SOAL
+    // FILTER & CETAK
     // ============================================================
 
     function filterSoal(filter) {
         renderSoal(filter);
     }
-
-    // ============================================================
-    // CETAK HASIL & SERTIFIKAT
-    // ============================================================
 
     function printHasil() {
         window.print();
@@ -1058,7 +858,10 @@
 
     function printSertifikat() {
         const profile = guruProfile || { nama: 'Guru', nip: '-', nuptk: '-', nama_sekolah: '-' };
-        const peserta = getPesertaFromStorage();
+        // Catatan: Di sistem nyata, data peserta harusnya diambil dari tabel khusus, bukan dari localStorage global
+        // Ini hanya simulasi berdasarkan data yang ada
+        const data = getDataFromStorage();
+        const peserta = data ? (data.pesertaData || []) : [];
         const skorList = peserta.filter(p => p.skor > 0).map(p => p.skor);
         const avgSkor = skorList.length > 0 ? Math.round(skorList.reduce((a, b) => a + b, 0) / skorList.length) : 0;
         const status = avgSkor >= 70 ? 'LULUS' : 'TIDAK LULUS';
@@ -1078,62 +881,68 @@
                 <hr style="border:1px solid #eef2f7;margin:20px 0;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0;text-align:center;">
                     <div style="background:#f8fafc;padding:15px;border-radius:10px;">
-                        <div style="font-size:0.8em;color:#8a9aa8;">Total Peserta</div>
-                        <div style="font-size:2em;font-weight:700;color:#1a2a3a;">${peserta.length}</div>
+                        <div style="font-size:0.8em;color:#8a9aa8;">Rata-rata Nilai Sistem</div>
+                        <div style="font-size:2em;font-weight:700;color:#1a2a3a;">${avgSkor}</div>
                     </div>
                     <div style="background:#f8fafc;padding:15px;border-radius:10px;">
-                        <div style="font-size:0.8em;color:#8a9aa8;">Rata-rata Nilai</div>
-                        <div style="font-size:2em;font-weight:700;color:#1a2a3a;">${avgSkor}</div>
+                        <div style="font-size:0.8em;color:#8a9aa8;">Tanggal Terbit</div>
+                        <div style="font-size:1.2em;font-weight:700;color:#1a2a3a;">${new Date().toLocaleDateString('id-ID')}</div>
                     </div>
                 </div>
                 <div style="background:${statusColor}22;padding:15px;border-radius:10px;margin:10px 0;border:2px solid ${statusColor};">
                     <span style="font-size:1.2em;font-weight:700;color:${statusColor};">✅ ${status}</span>
                 </div>
-                <hr style="border:1px solid #eef2f7;margin:20px 0;">
-                <p style="font-size:0.8em;color:#8a9aa8;">
-                    Diterbitkan oleh: Sistem Ujian Online<br>
-                    Tanggal: ${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}
-                </p>
             </div>
         `;
 
         const win = window.open('', '_blank', 'width=800,height=600');
         if (win) {
-            win.document.write(`
-                <html>
-                    <head><title>Sertifikat - Ujian Online</title></head>
-                    <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f4f8;">
-                        ${certContent}
-                        <script>setTimeout(() => { window.print(); }, 500);</script>
-                    </body>
-                </html>
-            `);
+            win.document.write(`<html><head><title>Sertifikat</title></head><body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f4f8;">${certContent}<script>setTimeout(() => { window.print(); }, 500);<\/script></body></html>`);
             win.document.close();
         } else {
             alert('⚠️ Mohon izinkan pop-up untuk mencetak sertifikat.');
         }
     }
 
-    // ============================================================
-    // HANDLE LOGOUT
-    // ============================================================
-
     function handleLogout() {
         if (confirm('Apakah Anda yakin ingin keluar?')) {
             for (const type of ['pretest', 'posttest']) {
-                if (ujianState[type].timer) {
-                    clearInterval(ujianState[type].timer);
-                }
+                if (ujianState[type].timer) clearInterval(ujianState[type].timer);
             }
+            clearExamStateFromSession();
             clearSession();
             window.location.href = CONFIG.loginUrl;
         }
     }
 
     // ============================================================
-    // KEYBOARD SHORTCUTS
+    // EVENT LISTENERS (ANTI-CURANG & AUTO-SYNC)
     // ============================================================
 
+    // 1. Peringatan jika pindah tab saat ujian berlangsung
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            const isExamRunning = (ujianState.pretest.started && !ujianState.pretest.finished) || 
+                                  (ujianState.posttest.started && !ujianState.posttest.finished);
+            if (isExamRunning) {
+                console.warn('⚠️ Pengguna meninggalkan tab saat ujian berlangsung!');
+                // Opsional: Bisa ditambahkan log pelanggaran atau pengurangan nilai di sini
+            }
+        }
+    });
+
+    // 2. Auto-Sync jika Admin mengubah data di tab/browser yang sama
+    window.addEventListener('storage', (e) => {
+        if (e.key === CONFIG.storageKey || e.key === CONFIG.ujianStatusKey) {
+            console.log('🔄 Data diperbarui oleh proses lain (Admin). Menyinkronkan...');
+            loadUjianStatus();
+            renderTest();
+            renderUjian();
+            showToast('info', '🔄 Data soal atau status ujian diperbarui oleh Admin!');
+        }
+    });
+
+    // 3. Keyboard Shortcuts
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeResultModal();
@@ -1144,21 +953,40 @@
     // INIT
     // ============================================================
 
-    function init() {
-        if (!checkGuruSession()) {
-            return;
-        }
+    async function init() {
+        if (!checkGuruSession()) return;
 
         console.log('👨‍🏫 Guru Dashboard loaded');
         console.log('📌 Login sebagai:', currentUser.name);
 
-        // Load status ujian dari Admin
-        loadUjianStatus();
+        // 1. Muat State Ujian (Anti-Refresh)
+        loadExamStateFromSession();
 
+        // 2. Load Data dari GitHub (Jika tersedia)
+        try {
+            if (typeof loadDataFromGitHub === 'function') {
+                const loaded = await loadDataFromGitHub();
+                if (loaded) {
+                    console.log('✅ Data berhasil disinkronisasi dari GitHub');
+                    showToast('success', '☁️ Data berhasil disinkronisasi dari GitHub!');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Gagal sync dari GitHub:', error);
+        }
+
+        // 3. Load Status Ujian & Render
+        loadUjianStatus();
         renderTest();
         renderUjian();
 
-        // Expose functions globally
+        // 4. Update UI Sync Status
+        const syncStatus = document.getElementById('syncStatus');
+        if (syncStatus && typeof getSyncStatus === 'function') {
+            syncStatus.textContent = getSyncStatus();
+        }
+
+        // 5. Expose Functions Globally
         window.switchTab = switchTab;
         window.filterSoal = filterSoal;
         window.printHasil = printHasil;
@@ -1172,21 +1000,12 @@
         window.renderUjian = renderUjian;
         window.renderTest = renderTest;
         window.closeResultModal = closeResultModal;
-        window.loadUjianStatus = loadUjianStatus;
-
-        const data = getDataFromStorage();
-        if (data) {
-            console.log(`📊 Data dari localStorage:`);
-            console.log(`  👤 User: ${data.userData ? data.userData.length : 0}`);
-            console.log(`  👥 Peserta: ${data.pesertaData ? data.pesertaData.length : 0}`);
-            console.log(`  📝 Soal: ${data.soalData ? data.soalData.length : 0}`);
-        }
+        
+        if (typeof loadDataFromGitHub === 'function') window.loadDataFromGitHub = loadDataFromGitHub;
+        if (typeof saveDataToGitHub === 'function') window.saveDataToGitHub = saveDataToGitHub;
+        if (typeof getSyncStatus === 'function') window.getSyncStatus = getSyncStatus;
 
         console.log('✅ Guru Dashboard ready');
-        console.log('📋 2 Halaman: Test (Profil + Soal) dan Ujian');
-        console.log(`⏱️ Pretest: ${CONFIG.pretestDuration/60} menit | Posttest: ${CONFIG.posttestDuration/60} menit`);
-        console.log('📋 Status ujian terintegrasi dengan Admin');
-        console.log('💡 Shortcut: Escape = Tutup modal');
     }
 
     if (document.readyState === 'loading') {

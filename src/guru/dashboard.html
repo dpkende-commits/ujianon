@@ -11,7 +11,21 @@
     
     <!-- ✅ Library untuk parser Word -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js">
-    </script>
+
+        <!-- Firebase SDK -->
+        <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"
+            }
+        }
+        </script>
+
+        <!-- Firebase Config -->
+        <script src="../../public/js/firebase-config.js" type="module"></script>
+        <script src="../../public/js/firebase-crud.js" type="module"></script>
     
     <style>
         /* Navbar Styles */
@@ -220,6 +234,7 @@
                 <button class="btn btn-primary" onclick="printSertifikat()">📜 Cetak Sertifikat</button>
                 <button class="btn btn-warning" onclick="printHasil()">🖨️ Cetak Hasil</button>
                 <button class="btn btn-outline" onclick="location.reload()">🔄 Refresh</button>
+                <button class="btn btn-info" onclick="loadDataFromGitHub(); location.reload();">📥 Pull Data</button>
             </div>
         </div>
 
@@ -329,7 +344,9 @@
     <!-- ============================================================
     JAVASCRIPT
     ============================================================ -->
+    <script src="../../public/js/github-sync.js"></script>
     <script src="../../public/js/guru.js"></script>
+
 
 </body>
 </html>

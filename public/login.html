@@ -3,9 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Pretest & Posttest Kegiatan System</title>
+    <title>Login - Ujian Online System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/login.css">
+    
+    <style>
+        /* ============================================================
+           TAMBAHAN STYLE UNTUK REGISTER MODAL
+           ============================================================ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-box .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-box .modal-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2a3a;
+        }
+
+        .modal-box .modal-header .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal-box .modal-header .close-modal:hover {
+            color: #1a2a3a;
+        }
+
+        .modal-box .form-group {
+            margin-bottom: 16px;
+        }
+
+        .modal-box .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin-bottom: 6px;
+        }
+
+        .modal-box .form-group label .required {
+            color: #dc2626;
+        }
+
+        .modal-box .form-group input,
+        .modal-box .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            border: 2px solid #e5e9f0;
+            border-radius: 12px;
+            background: white;
+            color: #1a2a3a;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .modal-box .form-group input:focus,
+        .modal-box .form-group select:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+        }
+
+        .modal-box .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7a8a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            cursor: pointer;
+        }
+
+        .modal-box .btn-register {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .modal-box .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.3);
+        }
+
+        .modal-box .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .register-link a {
+            color: #059669;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .register-link a:hover {
+            color: #047857;
+            text-decoration: underline;
+        }
+
+        .toast.firebase-success {
+            background: linear-gradient(135deg, #059669, #047857);
+        }
+        .toast.firebase-error {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+        .toast.firebase-info {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+        .toast.firebase-warning {
+            background: linear-gradient(135deg, #d97706, #b45309);
+        }
+
+        @media (max-width: 520px) {
+            .modal-box {
+                padding: 24px 20px;
+            }
+            .modal-box .modal-header h2 {
+                font-size: 18px;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -21,7 +194,7 @@
 
         <div class="login-card">
 
-            !-- Header -->
+            <!-- Header -->
             <div class="login-header">
                 <div class="brand-icon">📚</div>
                 <h1>Pretest <span> & Posttest</span></h1>
@@ -51,7 +224,7 @@
             <!-- Login Form -->
             <form id="loginForm" onsubmit="handleLogin(event)" autocomplete="off" novalidate>
 
-                <!-- Username -->
+                <!-- Email / Username -->
                 <div class="login-form-group">
                     <label for="username">
                         Username atau Email
@@ -112,7 +285,7 @@
             <div class="login-footer">
 
                 <div class="register-link">
-                    Belum punya akun? <a href="#" onclick="showRegister(event)">Daftar sekarang</a>
+                    Belum punya akun? <a href="#" onclick="showRegisterModal(event)">Daftar sekarang</a>
                 </div>
 
                 <div class="demo-accounts">
@@ -141,118 +314,91 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT
+    REGISTER MODAL
     ============================================================ -->
-    <script>
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>📝 Daftar Akun</h2>
+                <button class="close-modal" onclick="closeRegisterModal()">&times;</button>
+            </div>
+
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Nama Lengkap <span class="required">*</span></label>
+                    <input type="text" id="registerName" placeholder="Masukkan nama lengkap" required>
+                </div>
+                <div class="form-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="registerEmail" placeholder="Masukkan email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password <span class="required">*</span></label>
+                    <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Role <span class="required">*</span></label>
+                    <select id="registerRole">
+                        <option value="guru">👨‍🏫 Guru</option>
+                        <option value="admin">👑 Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-register" id="registerBtn">
+                    ✅ Daftar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    FIREBASE SDK (Import Map)
+    ============================================================ -->
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"
+        }
+    }
+    </script>
+
+    <!-- ============================================================
+    JAVASCRIPT - FIREBASE + LOGIN
+    ============================================================ -->
+    <script type="module">
+        // ============================================================
+        // 🔑 GANTI DENGAN KONFIGURASI FIREBASE ANDA
+        // ============================================================
+        import { initializeApp } from "firebase/app";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail } from "firebase/auth";
+        import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+
+        const firebaseConfig = {
+        apiKey: "AIzaSyBKAyShW4wa8tCLHcp3tyft4axBi718TLA",
+        authDomain: "pretstdanposttest.firebaseapp.com",
+        projectId: "pretstdanposttest",
+        storageBucket: "pretstdanposttest.firebasestorage.app",
+        messagingSenderId: "553204719947",
+        appId: "1:553204719947:web:8848ee07669f611a38c8ce",
+        measurementId: "G-CGXE76HXC8"
+        };
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         // ============================================================
         // STATE
         // ============================================================
         let selectedRole = 'admin';
         let isLoggingIn = false;
+        let isRegistering = false;
 
         // ============================================================
-        // USER DATA - Dari localStorage
-        // ============================================================
-
-        function getUsersFromStorage() {
-            try {
-                const stored = localStorage.getItem('ujianOnlineData');
-                if (stored) {
-                    const data = JSON.parse(stored);
-                    return data.userData || [];
-                }
-                return [];
-            } catch (e) {
-                console.error('❌ Gagal mengambil data user:', e);
-                return [];
-            }
-        }
-
-        function getUserByUsername(username, role) {
-            const users = getUsersFromStorage();
-
-            let user = users.find(u =>
-                u.username === username &&
-                u.role === role &&
-                u.status === 'active'
-            );
-
-            if (!user) {
-                user = users.find(u =>
-                    u.email === username &&
-                    u.role === role &&
-                    u.status === 'active'
-                );
-            }
-
-            return user;
-        }
-
-        function authenticate(username, password, role) {
-            const user = getUserByUsername(username, role);
-
-            if (user && user.password === password) {
-                return {
-                    success: true,
-                    user: {
-                        username: user.username,
-                        email: user.email,
-                        name: user.fullname,
-                        role: user.role
-                    },
-                    message: `Login berhasil! Selamat datang, ${user.fullname}`
-                };
-            }
-
-            if (role === 'admin') {
-                if (username === 'admin' && password === 'admin123') {
-                    return {
-                        success: true,
-                        user: {
-                            username: 'admin',
-                            email: 'admin@admin.com',
-                            name: 'Administrator',
-                            role: 'admin'
-                        },
-                        message: 'Login Admin berhasil!'
-                    };
-                }
-            }
-
-            if (role === 'guru') {
-                const users = getUsersFromStorage();
-                const guruExists = users.some(u => u.username === username && u.role === 'guru');
-
-                if (guruExists) {
-                    return {
-                        success: false,
-                        message: 'Password salah!'
-                    };
-                }
-
-                if (username === 'guru' && password === 'guru123') {
-                    return {
-                        success: true,
-                        user: {
-                            username: 'guru',
-                            email: 'guru@sekolah.com',
-                            name: 'Guru Mata Pelajaran',
-                            role: 'guru'
-                        },
-                        message: 'Login Guru berhasil!'
-                    };
-                }
-            }
-
-            const roleLabel = role === 'admin' ? 'Admin' : 'Guru';
-            return {
-                success: false,
-                message: `Username atau password ${roleLabel} salah!`
-            };
-        }
-
-        // ============================================================
-        // DOM REFERENCES
+        // DOM REFS
         // ============================================================
         const elements = {
             alert: document.getElementById('loginAlert'),
@@ -266,26 +412,32 @@
             loginBtn: document.getElementById('loginBtn'),
             btnText: document.querySelector('.btn-text'),
             spinner: document.querySelector('.spinner'),
-            togglePasswordBtn: document.querySelector('.toggle-password')
+            togglePasswordBtn: document.querySelector('.toggle-password'),
+            registerModal: document.getElementById('registerModal'),
+            registerName: document.getElementById('registerName'),
+            registerEmail: document.getElementById('registerEmail'),
+            registerPassword: document.getElementById('registerPassword'),
+            registerRole: document.getElementById('registerRole'),
+            registerBtn: document.getElementById('registerBtn'),
+            registerForm: document.getElementById('registerForm')
         };
 
         // ============================================================
-        // TOAST NOTIFICATION
+        // TOAST
         // ============================================================
         function showToast(type, message) {
             const toast = document.getElementById('toast');
-            toast.className = `toast ${type}`;
+            toast.className = `toast firebase-${type}`;
             toast.textContent = message;
             toast.classList.add('show');
-
             clearTimeout(toast._timeout);
             toast._timeout = setTimeout(() => {
                 toast.classList.remove('show');
-            }, 3000);
+            }, 3500);
         }
 
         // ============================================================
-        // ALERT FUNCTIONS
+        // ALERT
         // ============================================================
         function showAlert(type, message) {
             const icons = { error: '❌', success: '✅', info: 'ℹ️' };
@@ -312,36 +464,27 @@
         // ============================================================
         // SELECT ROLE
         // ============================================================
-        function selectRole(role) {
+        window.selectRole = function(role) {
             selectedRole = role;
-
             elements.roleBtns.forEach(btn => {
                 btn.classList.remove('active-admin', 'active-guru');
                 if (btn.dataset.role === role) {
                     btn.classList.add(role === 'admin' ? 'active-admin' : 'active-guru');
                 }
             });
-
             hideAlert();
             clearErrors();
             elements.username.focus();
-
-            if (role === 'admin') {
-                elements.username.placeholder = 'Masukkan username admin';
-            } else {
-                elements.username.placeholder = 'Masukkan username guru';
-            }
-
+            elements.username.placeholder = role === 'admin' ? 'Masukkan username admin' : 'Masukkan username guru';
             console.log(`📌 Role dipilih: ${role}`);
-        }
+        };
 
         // ============================================================
         // TOGGLE PASSWORD
         // ============================================================
-        function togglePassword() {
+        window.togglePassword = function() {
             const input = elements.password;
             const btn = elements.togglePasswordBtn;
-
             if (input.type === 'password') {
                 input.type = 'text';
                 btn.textContent = '🙈';
@@ -351,45 +494,156 @@
                 btn.textContent = '👁️';
                 btn.title = 'Tampilkan password';
             }
-        }
+        };
 
         // ============================================================
         // AUTO-FILL DEMO
         // ============================================================
-        function fillDemoAccount(role) {
-            const users = getUsersFromStorage();
-            const user = users.find(u => u.role === role && u.status === 'active');
+        window.fillDemoAccount = function(role) {
+            window.selectRole(role);
+            if (role === 'admin') {
+                elements.username.value = 'admin@admin.com';
+                elements.password.value = 'admin123';
+            } else {
+                elements.username.value = 'guru@sekolah.com';
+                elements.password.value = 'guru123';
+            }
+            clearErrors();
+            hideAlert();
+            showToast('info', `📝 Akun ${role === 'admin' ? 'Admin' : 'Guru'} (demo) telah diisi!`);
+            setTimeout(() => elements.password.focus(), 100);
+        };
 
-            if (user) {
-                selectRole(role);
-                elements.username.value = user.username;
-                elements.password.value = user.password;
-                clearErrors();
-                hideAlert();
-                showToast('info', `📝 Akun ${role === 'admin' ? 'Admin' : 'Guru'} telah diisi!`);
-                setTimeout(() => {
-                    elements.password.focus();
-                }, 100);
+        // ============================================================
+        // FORGOT PASSWORD
+        // ============================================================
+        window.showForgotPassword = async function(event) {
+            event.preventDefault();
+            const email = elements.username.value.trim();
+            
+            if (!email || !email.includes('@')) {
+                showAlert('error', '⚠️ Masukkan email yang valid untuk reset password!');
                 return;
             }
 
-            if (role === 'admin') {
-                selectRole('admin');
-                elements.username.value = 'admin';
-                elements.password.value = 'admin123';
-            } else {
-                selectRole('guru');
-                elements.username.value = 'guru';
-                elements.password.value = 'guru123';
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showAlert('success', '📧 Link reset password telah dikirim ke email Anda!');
+                showToast('success', '📧 Cek email Anda untuk reset password.');
+            } catch (error) {
+                let msg = '❌ Gagal mengirim reset password.';
+                if (error.code === 'auth/user-not-found') {
+                    msg = '❌ Email tidak terdaftar!';
+                }
+                showAlert('error', msg);
+                showToast('error', msg);
+            }
+        };
+
+        // ============================================================
+        // REGISTER MODAL
+        // ============================================================
+        window.showRegisterModal = function(event) {
+            if (event) event.preventDefault();
+            elements.registerModal.classList.add('show');
+        };
+
+        window.closeRegisterModal = function() {
+            elements.registerModal.classList.remove('show');
+        };
+
+        // Tutup modal jika klik overlay
+        elements.registerModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+            }
+        });
+
+        // ============================================================
+        // HANDLE REGISTER
+        // ============================================================
+        window.handleRegister = async function(event) {
+            event.preventDefault();
+
+            const name = elements.registerName.value.trim();
+            const email = elements.registerEmail.value.trim();
+            const password = elements.registerPassword.value.trim();
+            const role = elements.registerRole.value;
+
+            if (!name || !email || !password) {
+                showToast('error', '⚠️ Semua field harus diisi!');
+                return;
             }
 
-            clearErrors();
-            hideAlert();
-            showToast('info', `📝 Akun ${role === 'admin' ? 'Admin' : 'Guru'} (default) telah diisi!`);
-            setTimeout(() => {
-                elements.password.focus();
-            }, 100);
-        }
+            if (password.length < 6) {
+                showToast('error', '⚠️ Password minimal 6 karakter!');
+                return;
+            }
+
+            isRegistering = true;
+            elements.registerBtn.disabled = true;
+            elements.registerBtn.textContent = '⏳ Mendaftar...';
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                await setDoc(doc(db, 'users', user.uid), {
+                    uid: user.uid,
+                    name: name,
+                    email: user.email,
+                    role: role,
+                    createdAt: new Date().toISOString()
+                });
+
+                // Simpan juga ke localStorage untuk kompatibilitas
+                let localData = JSON.parse(localStorage.getItem('ujianOnlineData') || '{"userData":[]}');
+                if (!localData.userData) localData.userData = [];
+                
+                const exists = localData.userData.some(u => u.email === email || u.username === email);
+                if (!exists) {
+                    const nextId = localData.userData.length + 1;
+                    localData.userData.push({
+                        id: nextId,
+                        username: email.split('@')[0],
+                        email: email,
+                        fullname: name,
+                        password: password,
+                        role: role,
+                        status: 'active'
+                    });
+                    localStorage.setItem('ujianOnlineData', JSON.stringify(localData));
+                }
+
+                showToast('success', '✅ Akun berhasil dibuat! Silakan login.');
+                elements.registerModal.classList.remove('show');
+                elements.registerForm.reset();
+
+                elements.username.value = email;
+                elements.password.value = '';
+
+                showAlert('success', '✅ Akun berhasil dibuat! Silakan login.');
+
+            } catch (error) {
+                console.error('Register error:', error);
+                let msg = '❌ Gagal mendaftar!';
+                if (error.code === 'auth/email-already-in-use') {
+                    msg = '❌ Email sudah terdaftar!';
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = '❌ Format email tidak valid!';
+                } else if (error.code === 'auth/weak-password') {
+                    msg = '❌ Password terlalu lemah! Minimal 6 karakter.';
+                } else {
+                    msg = '❌ ' + error.message;
+                }
+                showToast('error', msg);
+                showAlert('error', msg);
+            } finally {
+                isRegistering = false;
+                elements.registerBtn.disabled = false;
+                elements.registerBtn.textContent = '✅ Daftar';
+            }
+        };
 
         // ============================================================
         // LOADING STATE
@@ -409,16 +663,16 @@
         // ============================================================
         // HANDLE LOGIN
         // ============================================================
-        function handleLogin(event) {
+        window.handleLogin = async function(event) {
             event.preventDefault();
 
             if (isLoggingIn) return;
 
-            const username = elements.username.value.trim();
+            const email = elements.username.value.trim();
             const password = elements.password.value.trim();
             const remember = elements.remember.checked;
 
-            if (!username) {
+            if (!email) {
                 showAlert('error', '⚠️ Username atau email harus diisi!');
                 elements.username.classList.add('error');
                 elements.username.focus();
@@ -435,60 +689,106 @@
             clearErrors();
             startLoading();
 
-            console.log(`🔐 Mencoba login sebagai ${selectedRole}: ${username}`);
+            console.log(`🔐 Mencoba login sebagai ${selectedRole}: ${email}`);
 
-            setTimeout(() => {
-                const result = authenticate(username, password, selectedRole);
+            try {
+                await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
 
-                if (result.success) {
-                    showAlert('success', `✅ ${result.message}`);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
-                    const sessionData = {
-                        user: result.user,
-                        loginTime: new Date().toISOString(),
-                        remember: remember
-                    };
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                let userData = {};
 
-                    if (remember) {
-                        localStorage.setItem('userSession', JSON.stringify(sessionData));
-                    } else {
-                        sessionStorage.setItem('userSession', JSON.stringify(sessionData));
-                    }
-
-                    showToast('success', `✅ Selamat datang, ${result.user.name}!`);
-
-                    setTimeout(() => {
-                        if (result.user.role === 'admin') {
-                            window.location.href = '../src/admin/dashboard.html';
-                        } else {
-                            window.location.href = '../src/guru/dashboard.html';
-                        }
-                    }, 1200);
-
+                if (userDoc.exists()) {
+                    userData = userDoc.data();
                 } else {
-                    showAlert('error', `❌ ${result.message}`);
-                    stopLoading();
-
-                    elements.username.classList.add('error');
-                    elements.password.classList.add('error');
-
-                    setTimeout(clearErrors, 600);
+                    const localData = JSON.parse(localStorage.getItem('ujianOnlineData') || '{"userData":[]}');
+                    const localUser = localData.userData.find(u => u.email === email || u.username === email);
+                    if (localUser) {
+                        userData = {
+                            name: localUser.fullname || email.split('@')[0],
+                            role: localUser.role || selectedRole
+                        };
+                    } else {
+                        userData = {
+                            name: email.split('@')[0],
+                            role: selectedRole
+                        };
+                    }
                 }
-            }, 1500);
-        }
 
-        // ============================================================
-        // HANDLER LAINNYA
-        // ============================================================
-        function showForgotPassword(event) {
-            event.preventDefault();
-            showAlert('info', '📧 Link reset password akan dikirim ke email Anda.');
-        }
+                const userRole = userData.role || selectedRole;
+                if (userRole !== selectedRole) {
+                    const localData = JSON.parse(localStorage.getItem('ujianOnlineData') || '{"userData":[]}');
+                    const localUser = localData.userData.find(u => 
+                        (u.email === email || u.username === email) && 
+                        u.role === selectedRole && 
+                        u.status === 'active'
+                    );
+                    
+                    if (!localUser) {
+                        showAlert('error', `❌ Akun ini bukan sebagai ${selectedRole === 'admin' ? 'Admin' : 'Guru'}. Silakan pilih role yang sesuai.`);
+                        stopLoading();
+                        return;
+                    }
+                    userData.role = selectedRole;
+                }
 
-        function showRegister(event) {
-            event.preventDefault();
-            showAlert('info', '📝 Silakan hubungi administrator untuk pendaftaran akun.');
-        }
+                const sessionData = {
+                    user: {
+                        uid: user.uid,
+                        name: userData.name || email.split('@')[0],
+                        email: user.email,
+                        role: userData.role || selectedRole
+                    },
+                    loginTime: new Date().toISOString(),
+                    remember: remember
+                };
+
+                if (remember) {
+                    localStorage.setItem('userSession', JSON.stringify(sessionData));
+                } else {
+                    sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+                }
+
+                showAlert('success', `✅ Selamat datang, ${sessionData.user.name}!`);
+                showToast('success', `✅ Selamat datang, ${sessionData.user.name}!`);
+
+                setTimeout(() => {
+                    const role = sessionData.user.role;
+                    if (role === 'admin') {
+                        window.location.href = '../admin/dashboard.html';
+                    } else {
+                        window.location.href = '../guru/dashboard.html';
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('Login error:', error);
+                let msg = '❌ Login gagal!';
+                if (error.code === 'auth/user-not-found') {
+                    msg = '❌ Email tidak terdaftar!';
+                } else if (error.code === 'auth/wrong-password') {
+                    msg = '❌ Password salah!';
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = '❌ Format email tidak valid!';
+                } else if (error.code === 'auth/too-many-requests') {
+                    msg = '⚠️ Terlalu banyak percobaan. Coba lagi nanti.';
+                } else if (error.code === 'auth/invalid-credential') {
+                    msg = '❌ Email atau password salah!';
+                } else {
+                    msg = '❌ ' + error.message;
+                }
+                showAlert('error', msg);
+                showToast('error', msg);
+                elements.username.classList.add('error');
+                elements.password.classList.add('error');
+                setTimeout(clearErrors, 600);
+            } finally {
+                stopLoading();
+            }
+        };
 
         // ============================================================
         // KEYBOARD SHORTCUTS
@@ -496,21 +796,17 @@
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.shiftKey && e.key === 'A') {
                 e.preventDefault();
-                selectRole('admin');
+                window.selectRole('admin');
             }
             if (e.ctrlKey && e.shiftKey && e.key === 'G') {
                 e.preventDefault();
-                selectRole('guru');
+                window.selectRole('guru');
             }
             if (e.key === 'Escape') {
                 hideAlert();
                 clearErrors();
-            }
-
-            if (e.key === 'Enter') {
-                const active = document.activeElement;
-                if (active && active.tagName === 'INPUT') {
-                    elements.loginForm.dispatchEvent(new Event('submit'));
+                if (elements.registerModal.classList.contains('show')) {
+                    window.closeRegisterModal();
                 }
             }
         });
@@ -527,10 +823,11 @@
                     const data = JSON.parse(session);
                     if (data.user && data.user.role) {
                         console.log(`🔄 Auto login sebagai: ${data.user.name}`);
-                        if (data.user.role === 'admin') {
-                            window.location.href = '../src/admin/dashboard.html';
+                        const role = data.user.role;
+                        if (role === 'admin') {
+                            window.location.href = '../admin/dashboard.html';
                         } else {
-                            window.location.href = '../src/guru/dashboard.html';
+                            window.location.href = '../guru/dashboard.html';
                         }
                         return true;
                     }
@@ -548,20 +845,10 @@
             console.log('🔐 Silakan login terlebih dahulu');
             console.log('📌 Role default: Admin');
             console.log('💡 Shortcut: Ctrl+Shift+A (Admin) | Ctrl+Shift+G (Guru)');
-            console.log('⌨️  Escape: Tutup alert');
+            console.log('⌨️  Escape: Tutup alert & modal');
             console.log('');
-
-            const users = getUsersFromStorage();
-            if (users.length > 0) {
-                console.log('👤 User tersedia di localStorage:');
-                users.forEach(u => {
-                    console.log(`  - ${u.username} (${u.role}) - ${u.status === 'active' ? '✅ Aktif' : '⏸ Nonaktif'}`);
-                });
-            } else {
-                console.log('👤 Belum ada user di localStorage, gunakan akun default');
-                console.log('  - Admin: admin / admin123');
-                console.log('  - Guru: guru / guru123');
-            }
+            console.log('🔥 Firebase Authentication siap digunakan!');
+            console.log('📝 Daftar akun baru dengan klik "Daftar sekarang"');
         }
 
         setTimeout(() => {
@@ -582,11 +869,10 @@
         // EXPOSE FOR CONSOLE DEBUGGING
         // ============================================================
         window.__login = {
-            getUsersFromStorage: getUsersFromStorage,
-            authenticate: authenticate,
+            auth: auth,
+            db: db,
             selectedRole: () => selectedRole
         };
-
         console.log('🔧 Type __login in console untuk debugging');
     </script>
 
