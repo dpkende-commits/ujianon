@@ -1,6 +1,6 @@
 // ============================================================
 // ADMIN DASHBOARD JS - Ujian Online System
-// VERSI: 3.0.0 - LENGKAP
+// VERSI: 3.1.0 - DENGAN PARSER WORD
 // ============================================================
 
 (function() {
@@ -284,7 +284,7 @@
     }
 
     // ============================================================
-    // UJIAN STATUS FUNCTIONS (Aktif/Nonaktif)
+    // UJIAN STATUS FUNCTIONS
     // ============================================================
 
     function loadUjianStatus() {
@@ -498,7 +498,306 @@
     }
 
     // ============================================================
-    // RENDER FUNCTIONS - LENGKAP
+    // ============================================================
+    // ============================================================
+    // PARSER WORD - FUNGSI UTAMA
+    // ============================================================
+    // ============================================================
+    // ============================================================
+
+    /**
+     * PARSE FILE WORD (.docx) MENJADI ARRAY SOAL
+     * Fungsi ini membaca file .docx dan mengekstrak soal
+     * Menggunakan library mammoth.js untuk ekstraksi teks
+     */
+    async function parseWordFile(file) {
+        try {
+            // Cek apakah mammoth tersedia
+            if (typeof mammoth === 'undefined') {
+                showToast('error', '❌ Library mammoth.js tidak ditemukan! Tambahkan script mammoth.js');
+                console.error('❌ mammoth.js tidak ditemukan!');
+                return;
+            }
+
+            // Baca file sebagai ArrayBuffer
+            const arrayBuffer = await file.arrayBuffer();
+            
+            // Ekstrak teks menggunakan mammoth
+            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+            const text = result.value;
+            
+            console.log('📄 Teks hasil parsing (pertama 500 karakter):', text.substring(0, 500));
+            console.log('📄 Total panjang teks:', text.length, 'karakter');
+            
+            if (!text || text.trim().length < 10) {
+                showToast('error', '❌ File tidak mengandung teks yang dapat dibaca!');
+                return;
+            }
+            
+            // Parsing teks menjadi array soal
+            const parsedQuestions = parseQuestionsFromText(text);
+            
+            if (parsedQuestions.length === 0) {
+                showToast('error', '❌ Tidak ditemukan soal dalam file. Periksa format template!');
+                console.log('❌ Tidak ada soal yang terdeteksi. Teks yang diproses:', text);
+                return;
+            }
+            
+            // Simpan hasil parsing
+            uploadedSoalData = parsedQuestions.map((q, index) => ({
+                id: 'temp_' + Date.now() + '_' + index,
+                pertanyaan: q.pertanyaan || 'Soal tidak memiliki pertanyaan',
+                a: q.a || '-',
+                b: q.b || '-',
+                c: q.c || '-',
+                d: q.d || '-',
+                jawaban: q.jawaban || 'A',
+                bobot: 1
+            }));
+            
+            console.log('📝 Hasil parsing:', uploadedSoalData);
+            console.log(`📝 Total soal: ${uploadedSoalData.length}`);
+            
+            // Tampilkan preview
+            showPreview();
+            
+            // Update UI upload area
+            const uploadArea = elements.uploadArea;
+            if (uploadArea) {
+                uploadArea.style.borderColor = '#059669';
+                const title = uploadArea.querySelector('.upload-title');
+                const desc = uploadArea.querySelector('.upload-desc');
+                if (title) title.textContent = '✅ File berhasil diupload!';
+                if (desc) desc.textContent = `Ditemukan ${uploadedSoalData.length} soal dari file "${file.name}"`;
+            }
+            
+            showToast('success', `📄 ${uploadedSoalData.length} soal ditemukan dari file "${file.name}"`);
+            
+        } catch (error) {
+            console.error('❌ Error parsing file:', error);
+            showToast('error', '❌ Gagal membaca file. Pastikan file .docx valid!');
+        }
+    }
+
+    /**
+     * PARSING TEKS MENJADI ARRAY SOAL
+     * Mendukung berbagai format:
+     * 1. "Pertanyaan:" + "Pilihan A:" + "Jawaban:"
+     * 2. "1." + "A." + "B." + "C." + "D." + "Jawaban:"
+     * 3. Separator --- atau ===
+     */
+    function parseQuestionsFromText(text) {
+        const questions = [];
+        
+        // Normalisasi teks
+        let cleanText = text
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+            .replace(/\t/g, ' ')
+            .replace(/\u2013/g, '-')
+            .replace(/\u2014/g, '-')
+            .replace(/\u2018/g, "'")
+            .replace(/\u2019/g, "'")
+            .replace(/\u201C/g, '"')
+            .replace(/\u201D/g, '"')
+            .trim();
+        
+        console.log('🔍 Mulai parsing teks...');
+        
+        // ============================================================
+        // METODE 1: Format "Pertanyaan:" + "Pilihan A:" + "Jawaban:"
+        // ============================================================
+        const questionRegex = /(?:Pertanyaan|Soal)\s*[:.]\s*([^\n]+)((?:\s*(?:Pilihan\s*[A-D]|[A-D]\.)\s*[:.]?\s*[^\n]+)+)(?:\s*Jawaban\s*[:.]?\s*([A-D]))/gi;
+        
+        let match;
+        while ((match = questionRegex.exec(cleanText)) !== null) {
+            const pertanyaan = match[1].trim();
+            const optionsBlock = match[2];
+            const jawaban = match[3] ? match[3].trim().toUpperCase() : 'A';
+            
+            const options = { a: '-', b: '-', c: '-', d: '-' };
+            
+            // Ekstrak pilihan
+            const optionPatterns = [
+                { key: 'a', regex: /(?:Pilihan\s*A|A\.)\s*[:.]?\s*([^\n]+)/i },
+                { key: 'b', regex: /(?:Pilihan\s*B|B\.)\s*[:.]?\s*([^\n]+)/i },
+                { key: 'c', regex: /(?:Pilihan\s*C|C\.)\s*[:.]?\s*([^\n]+)/i },
+                { key: 'd', regex: /(?:Pilihan\s*D|D\.)\s*[:.]?\s*([^\n]+)/i }
+            ];
+            
+            optionPatterns.forEach(({ key, regex }) => {
+                const optMatch = optionsBlock.match(regex);
+                if (optMatch) {
+                    options[key] = optMatch[1].trim();
+                }
+            });
+            
+            if (pertanyaan && options.a) {
+                questions.push({
+                    pertanyaan: pertanyaan,
+                    a: options.a,
+                    b: options.b,
+                    c: options.c,
+                    d: options.d,
+                    jawaban: jawaban
+                });
+            }
+        }
+        
+        console.log(`📊 Metode 1 menemukan: ${questions.length} soal`);
+        
+        // ============================================================
+        // METODE 2: Format nomor soal (1. / 1) + pilihan A. B. C. D.
+        // ============================================================
+        if (questions.length === 0) {
+            const numberRegex = /(?:^|\n)\s*(\d+)\.?\s+([^\n]+)\s*\n((?:\s*[A-D]\.\s*[^\n]+\s*)+)/g;
+            
+            while ((match = numberRegex.exec(cleanText)) !== null) {
+                const pertanyaan = match[2].trim();
+                const optionsBlock = match[3];
+                
+                const options = { a: '-', b: '-', c: '-', d: '-' };
+                const optionRegex = /([A-D])\.\s*([^\n]+)/g;
+                let optMatch;
+                while ((optMatch = optionRegex.exec(optionsBlock)) !== null) {
+                    const key = optMatch[1].toLowerCase();
+                    options[key] = optMatch[2].trim();
+                }
+                
+                let jawaban = 'A';
+                const jawabanMatch = cleanText.substring(0, 5000).match(new RegExp(`Jawaban\\s*[:.]?\\s*([A-D])`, 'i'));
+                if (jawabanMatch) {
+                    jawaban = jawabanMatch[1].toUpperCase();
+                }
+                
+                if (pertanyaan && options.a) {
+                    questions.push({
+                        pertanyaan: pertanyaan,
+                        a: options.a,
+                        b: options.b,
+                        c: options.c,
+                        d: options.d,
+                        jawaban: jawaban
+                    });
+                }
+            }
+            console.log(`📊 Metode 2 menemukan: ${questions.length} soal`);
+        }
+        
+        // ============================================================
+        // METODE 3: Split dengan separator (---, ===, atau baris kosong)
+        // ============================================================
+        if (questions.length === 0) {
+            const separators = ['---', '===', '\n\n\n\n', '\n\n'];
+            let separator = separators.find(sep => cleanText.includes(sep));
+            
+            if (separator) {
+                const blocks = cleanText.split(separator).filter(b => b.trim().length > 20);
+                
+                blocks.forEach(block => {
+                    const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    if (lines.length >= 4) {
+                        let pertanyaan = '';
+                        let options = { a: '-', b: '-', c: '-', d: '-' };
+                        let jawaban = 'A';
+                        
+                        lines.forEach(line => {
+                            if (!/^[A-D][\.)]/.test(line) && !/^Pilihan\s*[A-D]/i.test(line) && !/^Jawaban/i.test(line)) {
+                                if (!pertanyaan) pertanyaan = line;
+                            }
+                            
+                            const optionMatch = line.match(/^([A-D])[\.)]\s*(.+)/);
+                            if (optionMatch) {
+                                const key = optionMatch[1].toLowerCase();
+                                options[key] = optionMatch[2].trim();
+                            }
+                            
+                            const jawabMatch = line.match(/^Jawaban\s*[:.]?\s*([A-D])/i);
+                            if (jawabMatch) {
+                                jawaban = jawabMatch[1].toUpperCase();
+                            }
+                        });
+                        
+                        if (pertanyaan && options.a) {
+                            questions.push({
+                                pertanyaan: pertanyaan,
+                                a: options.a,
+                                b: options.b,
+                                c: options.c,
+                                d: options.d,
+                                jawaban: jawaban
+                            });
+                        }
+                    }
+                });
+                console.log(`📊 Metode 3 menemukan: ${questions.length} soal`);
+            }
+        }
+        
+        // ============================================================
+        // METODE 4: Fallback - cari pola A. B. C. D. di teks
+        // ============================================================
+        if (questions.length === 0) {
+            console.log('🔄 Mencoba metode fallback...');
+            
+            // Cari blok yang mengandung A. B. C. D.
+            const blockRegex = /([^\n]+(?:\n[^\n]+)*?)\s*(?:[A-D]\.\s*[^\n]+\s*){3,}/g;
+            let blockMatch;
+            
+            while ((blockMatch = blockRegex.exec(cleanText)) !== null) {
+                const block = blockMatch[1] + '\n' + blockMatch[0];
+                const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                
+                if (lines.length >= 4) {
+                    let pertanyaan = '';
+                    let options = { a: '-', b: '-', c: '-', d: '-' };
+                    
+                    lines.forEach(line => {
+                        if (!/^[A-D][\.)]/.test(line)) {
+                            if (!pertanyaan) pertanyaan = line;
+                        }
+                        
+                        const optionMatch = line.match(/^([A-D])[\.)]\s*(.+)/);
+                        if (optionMatch) {
+                            const key = optionMatch[1].toLowerCase();
+                            options[key] = optionMatch[2].trim();
+                        }
+                    });
+                    
+                    if (pertanyaan && options.a) {
+                        questions.push({
+                            pertanyaan: pertanyaan,
+                            a: options.a,
+                            b: options.b,
+                            c: options.c,
+                            d: options.d,
+                            jawaban: 'A'
+                        });
+                    }
+                }
+            }
+            console.log(`📊 Metode 4 (fallback) menemukan: ${questions.length} soal`);
+        }
+        
+        // Hapus duplikat berdasarkan pertanyaan
+        const uniqueQuestions = [];
+        const seenQuestions = new Set();
+        
+        questions.forEach(q => {
+            const key = q.pertanyaan.substring(0, 30).toLowerCase();
+            if (!seenQuestions.has(key)) {
+                seenQuestions.add(key);
+                uniqueQuestions.push(q);
+            }
+        });
+        
+        console.log(`✅ Total soal unik: ${uniqueQuestions.length}`);
+        return uniqueQuestions;
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
     // ============================================================
 
     function renderStats() {
@@ -1504,7 +1803,7 @@
     }
 
     // ============================================================
-    // UPLOAD SOAL DARI WORD
+    // UPLOAD SOAL DARI WORD - INTEGRASI PARSER
     // ============================================================
 
     function handleFileUpload(event) {
@@ -1555,47 +1854,9 @@
         }, 200);
     }
 
-    function parseWordFile(file) {
-        const sampleQuestions = getSampleQuestions();
-        uploadedSoalData = sampleQuestions.map((q, index) => ({
-            id: 'temp_' + Date.now() + '_' + index,
-            pertanyaan: q.pertanyaan || 'Soal tidak memiliki pertanyaan',
-            a: q.a || '-',
-            b: q.b || '-',
-            c: q.c || '-',
-            d: q.d || '-',
-            jawaban: q.jawaban || 'A',
-            bobot: 1
-        }));
-
-        console.log('📝 Hasil parsing:', uploadedSoalData);
-        console.log(`📝 Total soal: ${uploadedSoalData.length}`);
-
-        showPreview();
-
-        const uploadArea = elements.uploadArea;
-        if (uploadArea) {
-            uploadArea.style.borderColor = '#059669';
-            const title = uploadArea.querySelector('.upload-title');
-            const desc = uploadArea.querySelector('.upload-desc');
-            if (title) title.textContent = '✅ File berhasil diupload!';
-            if (desc) desc.textContent = `Ditemukan ${uploadedSoalData.length} soal dari file "${file.name}"`;
-        }
-
-        showToast('success', `📄 ${uploadedSoalData.length} soal ditemukan dari file "${file.name}"`);
-    }
-
-    function getSampleQuestions() {
-        return [
-            { pertanyaan: 'Apa fungsi dari sistem operasi?', a: 'Mengelola hardware', b: 'Mengelola software',
-                c: 'Mengelola jaringan', d: 'Semua benar', jawaban: 'D' },
-            { pertanyaan: 'Apa itu database?', a: 'Kumpulan data terstruktur', b: 'Program aplikasi',
-                c: 'Jaringan komputer', d: 'Perangkat keras', jawaban: 'A' },
-            { pertanyaan: 'Apa kepanjangan dari HTML?', a: 'HyperText Markup Language',
-                b: 'HighText Markup Language', c: 'HyperTransfer Markup Language',
-                d: 'HighTransfer Markup Language', jawaban: 'A' }
-        ];
-    }
+    // ============================================================
+    // PREVIEW & UPLOADED SOAL MANAGEMENT
+    // ============================================================
 
     function showPreview() {
         const container = elements.soalPreview;
@@ -2168,6 +2429,7 @@
         window.handleFileUpload = handleFileUpload;
         window.startUpload = startUpload;
         window.parseWordFile = parseWordFile;
+        window.parseQuestionsFromText = parseQuestionsFromText;
         window.showPreview = showPreview;
         window.editUploadedSoal = editUploadedSoal;
         window.saveEditUploadedSoal = saveEditUploadedSoal;
