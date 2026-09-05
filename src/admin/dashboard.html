@@ -8,6 +8,12 @@
     <link rel="stylesheet" href="../../public/css/style.css">
     <link rel="stylesheet" href="../../public/css/navbar.css">
     <link rel="stylesheet" href="../../public/css/admin.css">
+    
+    <!-- ============================================================
+    ✅ TAMBAHAN: Library Mammoth.js untuk parsing file Word
+    ============================================================ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js">
+    </script>
 </head>
 <body>
 
@@ -695,7 +701,9 @@
         </div>
     </div>
 
-    <!-- Modal Upload Soal dari Word -->
+    <!-- ============================================================
+    MODAL UPLOAD SOAL DARI WORD (DIPERBAIKI)
+    ============================================================ -->
     <div class="modal-overlay" id="modalUploadSoal">
         <div class="modal" style="max-width:700px;">
             <div class="modal-header">
@@ -705,7 +713,7 @@
 
             <div class="word-info">
                 <span class="info-icon">📌</span>
-                <span>Upload file Word (.docx) dengan format soal yang sudah ditentukan. <a href="#" onclick="downloadTemplate()" style="color:#1d4ed8;font-weight:600;text-decoration:underline;">Download template</a></span>
+                <span>Upload file Word (.docx) dengan format soal yang sudah ditentukan. <a href="#" onclick="downloadTemplate(); return false;" style="color:#1d4ed8;font-weight:600;text-decoration:underline;">Download template</a></span>
             </div>
 
             <div class="form-group">
@@ -725,9 +733,9 @@
                 <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">📂 Pilih File</button>
             </div>
 
-            <div class="upload-progress" id="uploadProgress">
+            <div class="upload-progress" id="uploadProgress" style="display:none;">
                 <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-fill" id="progressFill" style="width:0%;"></div>
                 </div>
                 <div class="progress-text" id="progressText">Mengupload 0%</div>
             </div>
@@ -878,6 +886,7 @@
     <!-- ============================================================
     JAVASCRIPT
     ============================================================ -->
+    <!-- ✅ PASTIKAN admin.js sudah diganti dengan versi terbaru yang mengandung parser Word -->
     <script src="../../public/js/admin.js"></script>
 
 </body>
